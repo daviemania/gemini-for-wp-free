@@ -1,48 +1,24 @@
-# Wordpress - ignore core, configuration, examples, uploads and logs.
-# https://github.com/github/gitignore/blob/main/WordPress.gitignore
+# Node.js
+node_modules/
+.env
+.dockerignore
+Dockerfile.fixed
+docker-compose.yml
+gemini-cli.js
+google-gemini-cli-0.11.3.tgz
+google-gemini-cli-core-0.11.3.tgz
+package.json
+package-lock.json
+server.js
 
-# Core
-#
-# Note: if you want to stage/commit WP core files
-# you can delete this whole section/until Configuration.
-/wp-admin/
-/wp-content/index.php
-/wp-content/languages
-/wp-content/plugins/index.php
-/wp-content/themes/index.php
-/wp-includes/
-/index.php
-/license.txt
-/readme.html
-/wp-*.php
-/xmlrpc.php
+# VSCode
+.vscode/
 
-# Configuration
-wp-config.php
+# devcontainer
+.devcontainer/
 
-# Example themes
-/wp-content/themes/twenty*/
+# Github
+.github/
 
-# Example plugin
-/wp-content/plugins/hello.php
-
-# Uploads
-/wp-content/uploads/
-
-# Log files
-*.log
-
-# htaccess
-/.htaccess
-
-# All plugins
-#
-# Note: If you wish to whitelist plugins,
-# uncomment the next line
-#/wp-content/plugins
-
-# All themes
-#
-# Note: If you wish to whitelist themes,
-# uncomment the next line
-#/wp-content/themes
+# core
+/core/
