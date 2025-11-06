@@ -22,3 +22,4 @@ server.js
 
 # core
 /core/
+business_key.pem
