@@ -1,0 +1,17 @@
+version: '3'
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/universal:2
+    command: sleep infinity
+    volumes:
+      - .:/workspace:cached
+      - /home/bitnami:/home/bitnami:cached
+      - /opt/bitnami:/opt/bitnami:cached
+      - /bitnami:/bitnami:cached
+    working_dir: /workspace
+    network_mode: host
+    user: root
+    sysctls:
+      - fs.inotify.max_user_watches=524288
+    environment:
+      - GITHUB_TOKEN=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
