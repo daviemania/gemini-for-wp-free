@@ -1,0 +1,42 @@
+[
+    {
+        "label": "🚀 Connect to Container",
+        "command": "make",
+        "args": ["shell"],
+        "use_new_terminal": true,
+        "allow_concurrent_runs": true,
+        "reveal": "always"
+    },
+    {
+        "label": "⏹️ Stop Container",
+        "command": "make",
+        "args": ["stop"],
+        "use_new_terminal": false,
+        "allow_concurrent_runs": false,
+        "reveal": "always"
+    },
+    {
+        "label": "▶️ Start Container",
+        "command": "make",
+        "args": ["start"],
+        "use_new_terminal": false,
+        "allow_concurrent_runs": false,
+        "reveal": "always"
+    },
+    {
+        "label": "🧹 Clean Container",
+        "command": "make",
+        "args": ["clean"],
+        "use_new_terminal": true,
+        "allow_concurrent_runs": false,
+        "reveal": "always"
+    },
+    {
+        "label": "🔨 Rebuild Container",
+        "command": "make",
+        "args": ["rebuild"],
+        "use_new_terminal": true,
+        "allow_concurrent_runs": false,
+        "reveal": "always"
+    }
+]
