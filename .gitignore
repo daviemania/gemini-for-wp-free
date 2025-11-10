@@ -4,12 +4,8 @@ node_modules/
 .dockerignore
 Dockerfile.fixed
 docker-compose.yml
-gemini-cli.js
 google-gemini-cli-0.11.3.tgz
 google-gemini-cli-core-0.11.3.tgz
-package.json
-package-lock.json
-server.js
 
 # VSCode
 .vscode/
