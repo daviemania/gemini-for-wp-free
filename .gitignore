@@ -23,3 +23,6 @@ server.js
 # core
 /core/
 business_key.pem
+
+.gemini/
+gha-creds-*.json
