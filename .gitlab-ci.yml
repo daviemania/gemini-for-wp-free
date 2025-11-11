@@ -118,28 +118,28 @@ deploy-staging:
   stage: deploy
   environment:
     name: staging
-    url: https://staging.your-app.com
+    url: https://github.com/daviemania/gemini-for-wp
   only:
     - main
     - develop
   script:
     - echo "Deploying to staging environment..."
-    - echo "Container image: $IMAGE_NAME:latest"
-    - echo "✓ Deployed to staging successfully!"
+    - echo "Container image $IMAGE_NAME:latest"
+    - echo "Deployed to staging successfully"
 
 # Deploy: Deploy to production (manual approval required)
 deploy-production:
   stage: deploy
   environment:
     name: production
-    url: https://your-app.com
+    url: https://github.com/daviemania/gemini-for-wp
   only:
     - main
+  when: manual
   script:
     - echo "Deploying to production environment..."
-    - echo "Container image: $IMAGE_NAME:latest"
-    - echo "✓ Application successfully deployed to production!"
-  when: manual  # Requires manual trigger
+    - echo "Container image $IMAGE_NAME:latest"
+    - echo "Application successfully deployed to production"
 
 # Post: Cleanup
 cleanup-job:
