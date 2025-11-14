@@ -1,10 +1,8 @@
 # Use Alpine Linux - smaller and more reliable mirrors
 FROM alpine:latest
-
 # [1] Set the correct UID and GID for the 'bitnami' user
 ARG USER_UID=1000
 ARG USER_GID=1000
-
 # [2] Install common Dev Container utilities and features
 RUN apk update \
     && apk add --no-cache \
@@ -32,8 +30,6 @@ RUN apk update \
     && chown bitnami:bitnami /home/bitnami/.zshrc \
     # Clean up
     && rm -rf /var/cache/apk/*
-
 # [3] Set the correct working directory and user for subsequent commands
 WORKDIR /gemini-project
-
 USER bitnami
