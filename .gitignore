@@ -1,79 +1,52 @@
-
 # Node.js
-
 node_modules/
-
 npm-debug.log*
-
 yarn-debug.log*
-
 yarn-error.log*
-
 mcp-error.log*
-
 mcp-out.log*
-
 server-error.log*
-
 server-out.log*
 
+# PM2 Logs (new additions)
+logs/
+backup-error.log*
+backup-out.log*
 
+# Backup directories
+backups/
+
+# PM2 runtime files
+.pm2/
 
 # Environment variables
-
 .env
-
 .env.local
-
 .env.production
 
-
-
 # Virtual environments
-
 .venv/
-
 venv/
-
 env/
 
-
-
 # Python
-
 __pycache__/
-
 *.pyc
-
 *.pyo
-
 *.pyd
-
 .Python
-
 pip-log.txt
 
-
-
 # IDE
-
 .vscode/
-
 .idea/
-
 *.swp
-
 *.swo
 
-
-
 # OS
-
 .DS_Store
-
 Thumbs.db
 
 gemini-for-wp/
-
 .gemini/
 gha-creds-*.json
