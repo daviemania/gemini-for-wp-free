@@ -9,6 +9,8 @@ yarn-debug.log*
 
 yarn-error.log*
 
+mcp-error.log*
+
 
 
 # Environment variables
@@ -66,3 +68,6 @@ pip-log.txt
 Thumbs.db
 
 gemini-for-wp/
+
+.gemini/
+gha-creds-*.json
