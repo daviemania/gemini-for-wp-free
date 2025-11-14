@@ -19,6 +19,10 @@ backups/
 # PM2 runtime files
 .pm2/
 
+# Keys
+keys/
+.pem*
+
 # Environment variables
 .env
 .env.local
