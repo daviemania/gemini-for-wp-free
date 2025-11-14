@@ -11,6 +11,12 @@ yarn-error.log*
 
 mcp-error.log*
 
+mcp-out.log*
+
+server-error.log*
+
+server-out.log*
+
 
 
 # Environment variables
