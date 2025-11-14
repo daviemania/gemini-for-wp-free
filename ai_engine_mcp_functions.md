@@ -7,6 +7,50 @@ This document outlines the 37 Media Control Protocol (MCP) functions available f
 The WordPress MCP REST API endpoint is: `/wp-json/mcp/v1/sse`
 Access is granted using the Bearer Token: `uX484&B$k@c@6072&VdTJi#3`
 
+## Request Format
+
+**Important:** All requests to the `/mcp/v1/sse` endpoint **must** be in the JSON-RPC 2.0 format. The server will not process requests with a simple JSON body.
+
+The correct request structure is as follows:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "TOOL_NAME",
+    "arguments": {}
+  }
+}
+```
+
+- `jsonrpc`: Must be `"2.0"`.
+- `id`: A unique identifier for the request.
+- `method`: Must be `"tools/call"`.
+- `params`: An object containing:
+    - `name`: The name of the MCP function to execute (e.g., `wp_list_plugins`).
+    - `arguments`: An object containing the arguments for that function.
+
+### Example `curl` Command
+
+Here is an example of how to correctly call the `wp_list_plugins` function using `curl`:
+
+```bash
+curl -i -X POST 'https://maniainc.com/wp-json/mcp/v1/sse' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer uX484&B$k@c@6072&VdTJi#3' \
+  --data-raw '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "wp_list_plugins",
+      "arguments": {}
+    }
+  }'
+```
+
 ## Available Functions
 
 ### 1. `wp_list_plugins`
