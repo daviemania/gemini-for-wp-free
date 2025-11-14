@@ -1,9 +1,9 @@
-- [ ] [Test] Verify WordPress MCP integration
-  - [ ] [Test] Verify API Endpoint Accessibility
-    - [ ] Use `curl` to send a basic request to the `/wp-json/mcp/v1/sse` endpoint.
-  - [ ] [Test] Verify Core Function Execution
-    - [ ] Construct a `curl` command to call the `wp_list_plugins` function with the correct bearer token and JSON payload.
-    - [ ] Execute the `curl` command and validate the response.
-  - [ ] [Documentation] Log Test Results
-    - [ ] Create a `TEST.md` file.
-    - [ ] Document each test command, its output, and the pass/fail result in `TEST.md`.
+- [x] [Test] Verify WordPress MCP integration
+  - [x] [Test] Verify API Endpoint Accessibility
+    - [x] Use `curl` to send a basic request to the `/wp-json/mcp/v1/sse` endpoint.
+  - [x] [Test] Verify Core Function Execution
+    - [x] Construct a `curl` command to call the `wp_list_plugins` function with the correct bearer token and JSON payload.
+    - [x] Execute the `curl` command and validate the response.
+  - [x] [Documentation] Log Test Results
+    - [x] Create a `TEST.md` file.
+    - [x] Document each test command, its output, and the pass/fail result in `TEST.md`.

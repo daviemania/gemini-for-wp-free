@@ -5,7 +5,8 @@ This document provides an overview of the Media Control Protocol (MCP) functions
 ## REST API Endpoint and Authentication
 
 *   **REST API Endpoint:** `/wp-json/mcp/v1/sse`
-*   **Authentication:** Bearer Token `uX484&B$k@c@6072&VdTJi#3`
+*   **Authentication:** Bearer Token `uX4484&B$k@c@6072&VdTJi#3`
+*   **Protocol:** All requests must use the JSON-RPC 2.0 format.
 
 ## Available Functions (37 functions registered via MCP.Core)
 
