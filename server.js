@@ -8,8 +8,8 @@ const path = require("path");
 const fs = require("fs").promises;
 
 // AI Managers
-const HybridAIManager = require("./ai-manager-hybrid.js");
-const OllamaManager = require("./ollama-manager.js");
+const HybridAIManager = require("./ai-manager-hybrid");
+const OllamaManager = require("./ollama-manager");
 
 // MCP Client
 const MCP_RELAY_URL = "http://localhost:3001";
@@ -257,37 +257,47 @@ const utils = {
 
 // Health check
 app.get("/health", async (req, res) => {
-    const hybridStatus = await aiManager.getSystemStatus();
-    const ollamaStatus = ollamaOnly.getStats();
+    try {
+        const hybridStatus = await aiManager.getSystemStatus();
+        const ollamaStatus = ollamaOnly.getStats();
 
-    res.json(
-        utils.formatResponse(
-            true,
-            {
-                status: "healthy",
-                environment: config.app.environment,
-                uptime: process.uptime(),
-                ai: {
-                    hybrid: {
-                        cloud: hybridStatus.providers.cloud.available,
-                        gemini: hybridStatus.providers.gemini.available,
-                        memory: hybridStatus.memory,
+        res.json(
+            utils.formatResponse(
+                true,
+                {
+                    status: "healthy",
+                    environment: config.app.environment,
+                    uptime: process.uptime(),
+                    ai: {
+                        hybrid: {
+                            cloud: hybridStatus.providers.cloud.available,
+                            gemini: hybridStatus.providers.gemini.available,
+                            memory: hybridStatus.memory,
+                        },
+                        ollama: {
+                            active: ollamaStatus.activeModel,
+                            cloud: ollamaStatus.cloud.available,
+                            local: ollamaStatus.local.available,
+                        },
                     },
-                    ollama: {
-                        active: ollamaStatus.activeModel,
-                        cloud: ollamaStatus.cloud.available,
-                        local: ollamaStatus.local.available,
+                    mcp: {
+                        connected: true,
+                        endpoint: config.mcp.relayUrl,
+                        toolsAvailable: mcpClient.getToolDefinitions().length,
                     },
                 },
-                mcp: {
-                    connected: true,
-                    endpoint: config.mcp.relayUrl,
-                    toolsAvailable: mcpClient.getToolDefinitions().length,
-                },
-            },
-            "Server is running",
-        ),
-    );
+                "Server is running",
+            ),
+        );
+    } catch (error) {
+        console.error("Health check error:", error);
+        res.json(
+            utils.formatResponse(true, {
+                status: "initializing",
+                message: "AI managers still initializing",
+            }),
+        );
+    }
 });
 
 // API status
@@ -563,7 +573,10 @@ app.get("/api/mcp/tools", (req, res) => {
     );
 });
 
-// Main page
+// =============================================================================
+// MAIN PAGE
+// =============================================================================
+
 app.get("/", (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -573,66 +586,110 @@ app.get("/", (req, res) => {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>${config.app.name}</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-                .container { max-width: 900px; margin: 0 auto; }
-                .header { background: #f4f4f4; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
-                .endpoint { background: #f9f9f9; padding: 15px; margin: 10px 0; border-left: 4px solid #007acc; }
-                .mcp-tools { background: #e7f3ff; padding: 15px; margin: 10px 0; border-left: 4px solid #0066cc; }
-                code { background: #eee; padding: 2px 6px; border-radius: 3px; }
-                .badge { background: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-size: 12px; }
+                body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; background: #f5f5f5; }
+                .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px; margin-bottom: 30px; }
+                .badge { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.9em; margin: 5px; display: inline-block; }
+                .section { margin: 30px 0; }
+                .endpoint { background: #f9f9f9; padding: 15px; margin: 10px 0; border-left: 4px solid #667eea; border-radius: 4px; }
+                .endpoint h4 { margin: 0 0 10px 0; color: #333; }
+                .endpoint code { background: #e8e8e8; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+                .endpoint p { margin: 5px 0; color: #666; font-size: 0.95em; }
+                .cli { background: #1e1e1e; color: #e8e8e8; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                .cli code { color: #10b981; background: transparent; }
+                h2 { color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
             </style>
         </head>
         <body>
             <div class="container">
                 <div class="header">
                     <h1>🚀 ${config.app.name}</h1>
-                    <p>Version ${config.app.version} | Environment: ${config.app.environment}</p>
-                    <p><span class="badge">MCP ENABLED</span> ${mcpClient.getToolDefinitions().length} WordPress tools available</p>
+                    <p>Version ${config.app.version} | ${config.app.environment}</p>
+                    <div>
+                        <span class="badge">☁️ Ollama Cloud</span>
+                        <span class="badge">💻 Ollama Local</span>
+                        <span class="badge">🤖 Gemini AI</span>
+                        <span class="badge">🔧 ${mcpClient.getToolDefinitions().length} MCP Tools</span>
+                    </div>
                 </div>
 
-                <h2>Gemini AI Endpoints</h2>
+                <div class="section">
+                    <h2>🤖 AI Chat Endpoints</h2>
 
-                <div class="endpoint">
-                    <h3>POST <code>/api/generate</code></h3>
-                    <p>Generate content using Gemini AI</p>
-                    <p><strong>Body:</strong> <code>{"prompt": "Your prompt here"}</code></p>
+                    <div class="endpoint">
+                        <h4>POST <code>/api/chat-with-tools</code></h4>
+                        <p>Hybrid AI chat with WordPress MCP tools (Ollama Cloud + Gemini fallback)</p>
+                        <p><strong>Body:</strong> <code>{"messages": [{"content": "List my plugins"}], "provider": "cloud"}</code></p>
+                    </div>
+
+                    <div class="endpoint">
+                        <h4>POST <code>/api/ollama/chat</code></h4>
+                        <p>Ollama-only chat (cloud or local models)</p>
+                        <p><strong>Body:</strong> <code>{"message": "Hello", "enableMCP": true}</code></p>
+                    </div>
                 </div>
 
-                <div class="endpoint">
-                    <h3>POST <code>/api/chat-with-tools</code> <span class="badge">NEW</span></h3>
-                    <p>Chat with Gemini AI that can call WordPress MCP tools</p>
-                    <p><strong>Body:</strong> <code>{"messages": [{"role": "user", "content": "List my plugins"}]}</code></p>
+                <div class="section">
+                    <h2>🔧 WordPress MCP Tools</h2>
+
+                    <div class="endpoint">
+                        <h4>GET <code>/api/mcp/tools</code></h4>
+                        <p>List all ${mcpClient.getToolDefinitions().length} available WordPress tools</p>
+                    </div>
+
+                    <div class="endpoint">
+                        <h4>POST <code>/api/mcp/call</code></h4>
+                        <p>Direct call to WordPress MCP tools</p>
+                        <p><strong>Body:</strong> <code>{"tool": "wp_list_plugins", "args": {}}</code></p>
+                    </div>
                 </div>
 
-                <h2>MCP WordPress Tools</h2>
+                <div class="section">
+                    <h2>📊 Status Endpoints</h2>
 
-                <div class="mcp-tools">
-                    <h3>POST <code>/api/mcp/call</code></h3>
-                    <p>Direct call to any WordPress MCP tool</p>
-                    <p><strong>Body:</strong> <code>{"tool": "wp_list_plugins", "args": {}}</code></p>
+                    <div class="endpoint">
+                        <h4>GET <code>/health</code></h4>
+                        <p>Server health check with AI system status</p>
+                    </div>
+
+                    <div class="endpoint">
+                        <h4>GET <code>/api/status</code></h4>
+                        <p>Complete system status (AI providers, MCP, memory)</p>
+                    </div>
+
+                    <div class="endpoint">
+                        <h4>GET <code>/api/ai/stats</code></h4>
+                        <p>AI usage statistics and performance metrics</p>
+                    </div>
+
+                    <div class="endpoint">
+                        <h4>GET <code>/api/ollama/models</code></h4>
+                        <p>List available Ollama models (cloud and local)</p>
+                    </div>
                 </div>
 
-                <div class="mcp-tools">
-                    <h3>GET <code>/api/mcp/tools</code></h3>
-                    <p>List all available MCP tools with descriptions</p>
+                <div class="section">
+                    <h2>💻 CLI Commands</h2>
+                    <div class="cli">
+                        <p><code>npm run chat</code> - Regular Gemini chat</p>
+                        <p><code>npm run chatwmcp</code> - Gemini chat with MCP tools</p>
+                        <p><code>npm run ollamachat</code> - Ollama-only chat with MCP</p>
+                    </div>
                 </div>
 
-                <h2>Available MCP Tools</h2>
-                <ul>
-                    <li><code>wp_list_plugins</code> - List WordPress plugins</li>
-                    <li><code>wp_get_posts</code> - Get WordPress posts</li>
-                    <li><code>wp_create_post</code> - Create new post</li>
-                    <li><code>wp_update_post</code> - Update existing post</li>
-                    <li><code>wp_get_users</code> - Get WordPress users</li>
-                    <li><code>wp_upload_media</code> - Upload media from URL</li>
-                    <li><code>mwai_vision</code> - Analyze images with AI</li>
-                    <li><code>mwai_image</code> - Generate images with AI</li>
-                    <li>...and ${mcpClient.getToolDefinitions().length - 8} more!</li>
-                </ul>
-
-                <h2>CLI Usage</h2>
-                <p>Start interactive chat with MCP tools: <code>npm run chatwmcp</code></p>
-                <p>Regular chat without tools: <code>npm run chat</code></p>
+                <div class="section">
+                    <h2>🦙 Available MCP Tools</h2>
+                    <ul>
+                        <li><strong>wp_list_plugins</strong> - List WordPress plugins</li>
+                        <li><strong>wp_get_posts</strong> - Get WordPress posts (10 default)</li>
+                        <li><strong>wp_get_post</strong> - Get specific post by ID</li>
+                        <li><strong>wp_create_post</strong> - Create new post/page</li>
+                        <li><strong>wp_update_post</strong> - Update existing post</li>
+                        <li><strong>wp_get_users</strong> - Get WordPress users</li>
+                        <li><strong>wp_count_posts</strong> - Count posts by status</li>
+                        <li><strong>wp_upload_media</strong> - Upload media from URL</li>
+                    </ul>
+                </div>
             </div>
         </body>
         </html>
@@ -664,23 +721,10 @@ app.use((error, req, res, next) => {
 async function initializeServer() {
     try {
         await fs.mkdir("./logs", { recursive: true });
+        await fs.mkdir("./data", { recursive: true });
 
-        // Wait for AI managers to initialize
         console.log("🔄 Initializing AI managers...");
-
-        // Add a small delay to ensure managers are ready
         await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // Test if managers are ready
-        try {
-            const hybridStatus = await aiManager.getSystemStatus();
-            const ollamaStatus = ollamaOnly.getStats();
-            console.log("✅ AI managers initialized successfully");
-        } catch (error) {
-            console.log(
-                "⚠️  AI managers still initializing, server starting anyway...",
-            );
-        }
 
         app.listen(PORT, () => {
             console.log(`
@@ -690,25 +734,28 @@ async function initializeServer() {
 ║  Server:     http://localhost:${PORT}                          ║
 ║  MCP Relay:  ${config.mcp.relayUrl}                    ║
 ║  Environment: ${config.app.environment.padEnd(30)} ║
-║  AI Providers: Hybrid (Ollama Cloud + Gemini)               ║
-║  MCP Tools:  ✅ ${mcpClient.getToolDefinitions().length} tools available${" ".padEnd(19)}║
+║  MCP Tools:  ✅ ${mcpClient.getToolDefinitions().length} WordPress tools available         ║
+╠══════════════════════════════════════════════════════════════╣
+║  📋 Endpoints:                                               ║
+║     • GET    /health                                         ║
+║     • GET    /api/status                                     ║
+║     • POST   /api/chat-with-tools                            ║
+║     • POST   /api/ollama/chat                                ║
+║     • POST   /api/mcp/call                                   ║
+║     • GET    /api/mcp/tools                                  ║
+╠══════════════════════════════════════════════════════════════╣
+║  🤖 AI Providers:                                            ║
+║     • Ollama Cloud (FREE, 0 RAM)                             ║
+║     • Ollama Local (offline capable)                         ║
+║     • Google Gemini (fallback)                               ║
+╠══════════════════════════════════════════════════════════════╣
+║  💻 CLI Commands:                                            ║
+║     • npm run chat        - Gemini chat                      ║
+║     • npm run chatwmcp    - Gemini + MCP                     ║
+║     • npm run ollamachat  - Ollama + MCP                     ║
 ╚══════════════════════════════════════════════════════════════╝
 
-📋 API Endpoints:
-   • GET    /health                  - Health check
-   • GET    /api/status              - System status
-   • GET    /api/ai/status           - AI system status
-   • POST   /api/chat-with-tools     - Chat with MCP function calling
-   • POST   /api/ollama/chat         - Ollama-only chat
-   • POST   /api/mcp/call            - Direct MCP tool execution
-   • GET    /api/mcp/tools           - List available tools
-
-🔧 Available AI Providers:
-   • Ollama Cloud (FREE, 0 RAM)
-   • Ollama Local
-   • Google Gemini
-
-✅ Ready to process AI requests with WordPress integration!
+✅ Server ready! Visit http://localhost:${PORT}
             `);
         });
     } catch (error) {
