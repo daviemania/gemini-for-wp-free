@@ -1,16 +1,18 @@
 {
-  "dependencies": {
-    "@google/gemini-cli": "^0.14.0",
-    "@google/generative-ai": "^0.24.1",
-    "fs-extra": "^11.3.2",
-    "node-cron": "^4.2.1",
-    "node-fetch": "^3.3.2",
-    "simple-git": "^3.30.0"
-  },
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "chat": "node chat.js",
-    "chatwmcp": "node chat-with-mcp.js"
-  }
+    "dependencies": {
+        "@google/gemini-cli": "^0.14.0",
+        "@google/generative-ai": "^0.24.1",
+        "fs-extra": "^11.3.2",
+        "node-cron": "^4.2.1",
+        "node-fetch": "^3.3.2",
+        "ollama": "^0.6.3",
+        "simple-git": "^3.30.0"
+    },
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js",
+        "chat": "node chat.js",
+        "chatwmcp": "node chat-with-mcp.js",
+        "ollamachat": "node chat-ollama.js"
+    }
 }
