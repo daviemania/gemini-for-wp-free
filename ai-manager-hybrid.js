@@ -48,9 +48,9 @@ class HybridAIManager {
 
         // Gemini models (EMERGENCY FALLBACK)
         this.geminiModels = [
-            "gemini-2.5-flash",
-            "gemini-2.5-lite",
-            "gemini-2.5-pro",
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
+            "gemini-pro",
         ];
 
         // Active models
