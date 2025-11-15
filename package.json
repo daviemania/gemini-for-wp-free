@@ -25,5 +25,8 @@
         "organize:clean": "node smart-folder-manager/cli.js clean",
         "organize:analyze": "node smart-folder-manager/cli.js analyze --detailed",
         "organize:interactive": "node smart-folder-manager/cli.js"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.11"
     }
 }

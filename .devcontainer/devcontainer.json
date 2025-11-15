@@ -2,20 +2,15 @@
     "name": "Gemini Project",
     "build": {
         "dockerfile": "Dockerfile",
-        "options": ["--network=host"]
+        "options": ["--network=host", "--dns=8.8.8.8"]
     },
+    "runArgs": ["--env-file", "/gemini-project/.env"],
     "workspaceFolder": "/gemini-project",
     "workspaceMount": "source=${localWorkspaceFolder},target=/gemini-project,type=bind",
-
-    // Container stays running even when VS Code disconnects
     "overrideCommand": false,
     "shutdownAction": "stopContainer",
-
-    // Set user
     "remoteUser": "bitnami",
     "containerUser": "bitnami",
-
-    // VS Code extensions to install in the container
     "customizations": {
         "vscode": {
             "extensions": ["ms-python.python", "ms-vscode.makefile-tools"],
@@ -24,10 +19,6 @@
             }
         }
     },
-
-    // Expose ports if needed
     "forwardPorts": [],
-
-    // Post-create command (optional)
-    "postCreateCommand": "echo 'Dev container ready!'"
+    "postCreateCommand": "npm install && echo 'Dev container ready!'"
 }
