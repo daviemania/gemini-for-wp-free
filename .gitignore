@@ -12,6 +12,8 @@ server-out.log*
 logs/
 backup-error.log*
 backup-out.log*
+pm2-error.log*
+pm2-out.log*
 
 # Backup directories
 backups/

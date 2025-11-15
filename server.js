@@ -1,64 +1,19 @@
 /**
- * Gemini AI Project - Main Application Server with MCP Integration
- * A comprehensive Express.js server with Gemini AI and WordPress MCP tools
- * Features: API routes, middleware, error handling, security, logging, MCP tools
+ * Complete Multi-AI Server with MCP Integration
+ * Supports: Ollama Cloud, Ollama Local, Gemini, and WordPress MCP Tools
  */
 
 const express = require("express");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const path = require("path");
 const fs = require("fs").promises;
 
-// Initialize Express app
-const app = express();
-const PORT = process.env.PORT || 3000;
+// AI Managers
+const HybridAIManager = require("./ai-manager-hybrid.js");
+const OllamaManager = require("./ollama-manager.js");
 
-// =============================================================================
-// CONFIGURATION & CONSTANTS
-// =============================================================================
-
-const config = {
-    app: {
-        name: "Gemini AI Project with MCP",
-        version: "2.0.0",
-        environment: process.env.NODE_ENV || "development",
-    },
-    gemini: {
-        defaultModel: "gemini-pro",
-        fallbackModels: ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"],
-        maxOutputTokens: 2000,
-        temperature: 0.7,
-    },
-    mcp: {
-        relayUrl: "http://localhost:3001",
-        bearerToken: "Bearer uX484&B$k@c@6072&VdTJi#3",
-    },
-    security: {
-        rateLimit: {
-            windowMs: 15 * 60 * 1000,
-            max: 100,
-        },
-    },
-};
-
-// =============================================================================
-// MIDDLEWARE SETUP
-// =============================================================================
-
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
-
-// Custom logging middleware
-app.use((req, res, next) => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${req.ip}`);
-    next();
-});
-
-// =============================================================================
-// MCP TOOLS CLIENT
-// =============================================================================
+// MCP Client
+const MCP_RELAY_URL = "http://localhost:3001";
+const MCP_BEARER_TOKEN = "Bearer uX484&B$k@c@6072&VdTJi#3";
 
 class MCPClient {
     constructor(relayUrl, bearerToken) {
@@ -93,7 +48,6 @@ class MCPClient {
         }
     }
 
-    // Tool definitions for function calling
     getToolDefinitions() {
         return [
             {
@@ -226,204 +180,50 @@ class MCPClient {
                     required: ["url"],
                 },
             },
-            {
-                name: "mwai_vision",
-                description: "Analyze an image using AI Engine Vision",
-                parameters: {
-                    type: "object",
-                    properties: {
-                        message: {
-                            type: "string",
-                            description: "Question about the image",
-                        },
-                        url: { type: "string", description: "Image URL" },
-                    },
-                    required: ["message"],
-                },
-            },
-            {
-                name: "mwai_image",
-                description:
-                    "Generate an image using AI and save to Media Library",
-                parameters: {
-                    type: "object",
-                    properties: {
-                        message: {
-                            type: "string",
-                            description: "Image generation prompt",
-                        },
-                        title: { type: "string", description: "Image title" },
-                    },
-                    required: ["message"],
-                },
-            },
         ];
     }
 }
 
-// Initialize MCP client
-const mcpClient = new MCPClient(config.mcp.relayUrl, config.mcp.bearerToken);
+// Initialize Express app
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-// =============================================================================
-// GEMINI AI SERVICE WITH FUNCTION CALLING
-// =============================================================================
+// Configuration
+const config = {
+    app: {
+        name: "Multi-AI Server with MCP",
+        version: "3.0.0",
+        environment: process.env.NODE_ENV || "development",
+    },
+    mcp: {
+        relayUrl: MCP_RELAY_URL,
+        bearerToken: MCP_BEARER_TOKEN,
+    },
+};
 
-class GeminiAIService {
-    constructor() {
-        this.genAI = new GoogleGenerativeAI(
-            process.env.GEMINI_API_KEY || "your-api-key-here",
-        );
-        this.isConfigured = !!process.env.GEMINI_API_KEY;
-        this.currentModel = null;
-        this.availableModels = [];
+// Middleware
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
 
-        if (this.isConfigured) {
-            this.initializeModel();
-        }
-    }
+// Logging middleware
+app.use((req, res, next) => {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${req.ip}`);
+    next();
+});
 
-    async initializeModel() {
-        try {
-            // Try to list available models
-            const models = await this.genAI.listModels();
-            this.availableModels = models
-                .filter((m) =>
-                    m.supportedGenerationMethods?.includes("generateContent"),
-                )
-                .map((m) => m.name.replace("models/", ""));
+// Initialize AI Managers
+const aiManager = new HybridAIManager({
+    ollamaHost: "http://localhost:11434",
+    geminiKey: process.env.GEMINI_API_KEY,
+});
 
-            console.log(
-                `✅ Found ${this.availableModels.length} available Gemini models`,
-            );
+const ollamaOnly = new OllamaManager();
 
-            // Try to find the best available model
-            for (const modelName of config.gemini.fallbackModels) {
-                if (this.availableModels.includes(modelName)) {
-                    this.currentModel = modelName;
-                    console.log(`✅ Using Gemini model: ${this.currentModel}`);
-                    break;
-                }
-            }
+const mcpClient = new MCPClient(MCP_RELAY_URL, MCP_BEARER_TOKEN);
 
-            // If no preferred model found, use the first available
-            if (!this.currentModel && this.availableModels.length > 0) {
-                this.currentModel = this.availableModels[0];
-                console.log(
-                    `✅ Using first available model: ${this.currentModel}`,
-                );
-            }
-
-            if (!this.currentModel) {
-                this.currentModel = config.gemini.defaultModel;
-                console.log(
-                    `⚠️  No models detected, using default: ${this.currentModel}`,
-                );
-            }
-        } catch (error) {
-            console.log(`⚠️  Could not list models: ${error.message}`);
-            console.log(
-                `⚠️  Using default model: ${config.gemini.defaultModel}`,
-            );
-            this.currentModel = config.gemini.defaultModel;
-        }
-    }
-
-    getModel() {
-        if (!this.currentModel) {
-            this.currentModel = config.gemini.defaultModel;
-        }
-
-        return this.genAI.getGenerativeModel({
-            model: this.currentModel,
-            generationConfig: {
-                maxOutputTokens: config.gemini.maxOutputTokens,
-                temperature: config.gemini.temperature,
-            },
-        });
-    }
-
-    async generateContent(prompt, options = {}) {
-        if (!this.isConfigured) {
-            throw new Error(
-                "Gemini API key not configured. Set GEMINI_API_KEY environment variable.",
-            );
-        }
-
-        try {
-            const model = this.getModel();
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-
-            return {
-                success: true,
-                text: response.text(),
-                model: this.currentModel,
-                usage: {
-                    promptTokens: response.usageMetadata?.promptTokenCount || 0,
-                    candidatesTokens:
-                        response.usageMetadata?.candidatesTokenCount || 0,
-                    totalTokens: response.usageMetadata?.totalTokenCount || 0,
-                },
-            };
-        } catch (error) {
-            console.error("Gemini AI Error:", error);
-            return {
-                success: false,
-                error: error.message,
-                code: error.code || "UNKNOWN_ERROR",
-            };
-        }
-    }
-
-    async chatWithTools(messages, tools) {
-        if (!this.isConfigured) {
-            throw new Error("Gemini API key not configured.");
-        }
-
-        const modelWithTools = this.genAI.getGenerativeModel({
-            model: this.currentModel || config.gemini.defaultModel,
-            tools: [{ functionDeclarations: tools }],
-        });
-
-        const chat = modelWithTools.startChat({
-            history: messages.slice(0, -1),
-        });
-
-        const lastMessage = messages[messages.length - 1];
-        const result = await chat.sendMessage(
-            lastMessage.content || lastMessage,
-        );
-        const response = await result.response;
-
-        // Check if function calls were made
-        const functionCalls = response.functionCalls();
-
-        return {
-            text: response.text(),
-            functionCalls: functionCalls || [],
-            response: response,
-            model: this.currentModel,
-        };
-    }
-
-    getStatus() {
-        return {
-            configured: this.isConfigured,
-            model: this.currentModel || config.gemini.defaultModel,
-            availableModels: this.availableModels.length,
-            maxTokens: config.gemini.maxOutputTokens,
-            temperature: config.gemini.temperature,
-        };
-    }
-}
-
-// Initialize Gemini service
-const geminiService = new GeminiAIService();
-
-// =============================================================================
-// UTILITY FUNCTIONS
-// =============================================================================
-
+// Utility functions
 const utils = {
     formatResponse: (success, data, message = "") => ({
         success,
@@ -456,7 +256,10 @@ const utils = {
 // =============================================================================
 
 // Health check
-app.get("/health", (req, res) => {
+app.get("/health", async (req, res) => {
+    const hybridStatus = await aiManager.getSystemStatus();
+    const ollamaStatus = ollamaOnly.getStats();
+
     res.json(
         utils.formatResponse(
             true,
@@ -464,71 +267,65 @@ app.get("/health", (req, res) => {
                 status: "healthy",
                 environment: config.app.environment,
                 uptime: process.uptime(),
-                gemini: geminiService.getStatus(),
-                mcp: { connected: true, endpoint: config.mcp.relayUrl },
+                ai: {
+                    hybrid: {
+                        cloud: hybridStatus.providers.cloud.available,
+                        gemini: hybridStatus.providers.gemini.available,
+                        memory: hybridStatus.memory,
+                    },
+                    ollama: {
+                        active: ollamaStatus.activeModel,
+                        cloud: ollamaStatus.cloud.available,
+                        local: ollamaStatus.local.available,
+                    },
+                },
+                mcp: {
+                    connected: true,
+                    endpoint: config.mcp.relayUrl,
+                    toolsAvailable: mcpClient.getToolDefinitions().length,
+                },
             },
-            "Server is running normally",
+            "Server is running",
         ),
     );
 });
 
 // API status
-app.get("/api/status", (req, res) => {
-    res.json(
-        utils.formatResponse(true, {
-            app: config.app,
-            server: {
-                nodeVersion: process.version,
-                platform: process.platform,
-                uptime: Math.floor(process.uptime()),
-            },
-            gemini: geminiService.getStatus(),
-            mcp: {
-                relayUrl: config.mcp.relayUrl,
-                toolsAvailable: mcpClient.getToolDefinitions().length,
-            },
-        }),
-    );
-});
-
-// Main Gemini AI endpoint
-app.post("/api/generate", async (req, res) => {
+app.get("/api/status", async (req, res) => {
     try {
-        const { prompt, options } = req.body;
-        const validationError = utils.validatePrompt(prompt);
-        if (validationError) {
-            return res
-                .status(400)
-                .json(utils.formatResponse(false, null, validationError));
-        }
+        const hybridStatus = await aiManager.getSystemStatus();
+        const ollamaStatus = ollamaOnly.getStats();
 
-        const result = await geminiService.generateContent(prompt, options);
-
-        if (result.success) {
-            res.json(
-                utils.formatResponse(
-                    true,
-                    {
-                        generatedText: result.text,
-                        usage: result.usage,
-                    },
-                    "Content generated successfully",
-                ),
-            );
-        } else {
-            res.status(500).json(
-                utils.formatResponse(false, null, `AI Error: ${result.error}`),
-            );
-        }
+        res.json(
+            utils.formatResponse(true, {
+                app: config.app,
+                server: {
+                    nodeVersion: process.version,
+                    platform: process.platform,
+                    uptime: Math.floor(process.uptime()),
+                },
+                ai: {
+                    hybrid: hybridStatus,
+                    ollama: ollamaStatus,
+                },
+                mcp: {
+                    relayUrl: config.mcp.relayUrl,
+                    toolsAvailable: mcpClient.getToolDefinitions().length,
+                },
+            }),
+        );
     } catch (error) {
         utils.handleError(res, error);
     }
 });
 
-// Chat with MCP function calling
+// =============================================================================
+// HYBRID AI ENDPOINTS (Ollama Cloud + Gemini)
+// =============================================================================
+
 app.post("/api/chat-with-tools", async (req, res) => {
     try {
-        const { messages } = req.body;
+        const { messages, preferOllama = true, provider = "auto" } = req.body;
 
         if (!Array.isArray(messages) || messages.length === 0) {
             return res
@@ -542,28 +339,48 @@ app.post("/api/chat-with-tools", async (req, res) => {
                 );
         }
 
+        const lastMessage = messages[messages.length - 1];
+        const messageContent = lastMessage.content || lastMessage;
+
         const tools = mcpClient.getToolDefinitions();
-        const result = await geminiService.chatWithTools(messages, tools);
+
+        const result = await aiManager.chat(messageContent, {
+            preferOllama: preferOllama,
+            mcpTools: tools,
+            systemPrompt:
+                "You are a helpful assistant with access to WordPress management tools. When users ask about WordPress content, use the available tools to get accurate information.",
+            forceProvider: provider !== "auto" ? provider : null,
+        });
+
+        if (!result.success) {
+            return res
+                .status(500)
+                .json(utils.formatResponse(false, null, result.error));
+        }
 
         // Execute function calls if any
         const functionResults = [];
         if (result.functionCalls && result.functionCalls.length > 0) {
+            console.log(
+                `🔧 Executing ${result.functionCalls.length} MCP tools...`,
+            );
+
             for (const call of result.functionCalls) {
-                console.log(`Executing MCP tool: ${call.name}`);
                 try {
                     const toolResult = await mcpClient.callTool(
                         call.name,
-                        call.args,
+                        call.args || call.arguments,
                     );
+
                     functionResults.push({
                         tool: call.name,
-                        args: call.args,
+                        args: call.args || call.arguments,
                         result: toolResult,
                     });
                 } catch (error) {
                     functionResults.push({
                         tool: call.name,
-                        args: call.args,
+                        args: call.args || call.arguments,
                         error: error.message,
                     });
                 }
@@ -574,11 +391,14 @@ app.post("/api/chat-with-tools", async (req, res) => {
             utils.formatResponse(
                 true,
                 {
-                    response: result.text,
+                    response: result.response,
+                    provider: result.provider,
+                    model: result.model,
+                    responseTime: result.responseTime,
+                    complexity: result.complexity,
                     functionCalls: functionResults,
-                    messageCount: messages.length + 1,
                 },
-                "Chat response with tools generated",
+                "Chat response with MCP tools",
             ),
         );
     } catch (error) {
@@ -586,7 +406,129 @@ app.post("/api/chat-with-tools", async (req, res) => {
     }
 });
 
-// Direct MCP tool call
+app.get("/api/ai/status", async (req, res) => {
+    try {
+        const status = await aiManager.getSystemStatus();
+        res.json(utils.formatResponse(true, status, "Hybrid AI system status"));
+    } catch (error) {
+        utils.handleError(res, error);
+    }
+});
+
+app.get("/api/ai/stats", (req, res) => {
+    try {
+        const stats = aiManager.getStats();
+        res.json(utils.formatResponse(true, stats, "AI usage statistics"));
+    } catch (error) {
+        utils.handleError(res, error);
+    }
+});
+
+// =============================================================================
+// OLLAMA-ONLY ENDPOINTS
+// =============================================================================
+
+app.get("/api/ollama/status", async (req, res) => {
+    try {
+        const stats = ollamaOnly.getStats();
+        const models = await ollamaOnly.listModels();
+
+        res.json(
+            utils.formatResponse(
+                true,
+                {
+                    stats: stats,
+                    models: models,
+                },
+                "Ollama system status",
+            ),
+        );
+    } catch (error) {
+        utils.handleError(res, error);
+    }
+});
+
+app.post("/api/ollama/chat", async (req, res) => {
+    try {
+        const {
+            message,
+            model,
+            temperature,
+            maxTokens,
+            enableMCP = false,
+        } = req.body;
+
+        if (!message) {
+            return res
+                .status(400)
+                .json(utils.formatResponse(false, null, "Message is required"));
+        }
+
+        const tools = enableMCP ? mcpClient.getToolDefinitions() : null;
+        const systemPrompt = enableMCP
+            ? "You are a helpful assistant with access to WordPress management tools. Use them when users ask about WordPress."
+            : null;
+
+        const result = await ollamaOnly.chat(message, {
+            model: model,
+            temperature: temperature,
+            maxTokens: maxTokens,
+            tools: tools,
+            mcpClient: enableMCP ? mcpClient : null,
+            systemPrompt: systemPrompt,
+        });
+
+        res.json(
+            utils.formatResponse(
+                result.success,
+                result,
+                "Ollama chat response",
+            ),
+        );
+    } catch (error) {
+        utils.handleError(res, error);
+    }
+});
+
+app.post("/api/ollama/switch", async (req, res) => {
+    try {
+        const { model } = req.body;
+
+        if (!model) {
+            return res
+                .status(400)
+                .json(
+                    utils.formatResponse(false, null, "Model name is required"),
+                );
+        }
+
+        const result = ollamaOnly.switchModel(model);
+
+        res.json(
+            utils.formatResponse(
+                result.success,
+                result,
+                result.success ? "Model switched" : "Switch failed",
+            ),
+        );
+    } catch (error) {
+        utils.handleError(res, error);
+    }
+});
+
+app.get("/api/ollama/models", async (req, res) => {
+    try {
+        const models = await ollamaOnly.listModels();
+        res.json(utils.formatResponse(true, models, "Available Ollama models"));
+    } catch (error) {
+        utils.handleError(res, error);
+    }
+});
+
+// =============================================================================
+// MCP ENDPOINTS
+// =============================================================================
+
 app.post("/api/mcp/call", async (req, res) => {
     try {
         const { tool, args } = req.body;
@@ -607,7 +549,6 @@ app.post("/api/mcp/call", async (req, res) => {
     }
 });
 
-// List available MCP tools
 app.get("/api/mcp/tools", (req, res) => {
     const tools = mcpClient.getToolDefinitions();
     res.json(
@@ -724,30 +665,50 @@ async function initializeServer() {
     try {
         await fs.mkdir("./logs", { recursive: true });
 
+        // Wait for AI managers to initialize
+        console.log("🔄 Initializing AI managers...");
+
+        // Add a small delay to ensure managers are ready
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Test if managers are ready
+        try {
+            const hybridStatus = await aiManager.getSystemStatus();
+            const ollamaStatus = ollamaOnly.getStats();
+            console.log("✅ AI managers initialized successfully");
+        } catch (error) {
+            console.log(
+                "⚠️  AI managers still initializing, server starting anyway...",
+            );
+        }
+
         app.listen(PORT, () => {
             console.log(`
 ╔══════════════════════════════════════════════════════════════╗
-║          🚀 GEMINI AI SERVER WITH MCP TOOLS                 ║
+║          🚀 MULTI-AI SERVER WITH MCP TOOLS                  ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Server:     http://localhost:${PORT}                          ║
 ║  MCP Relay:  ${config.mcp.relayUrl}                    ║
 ║  Environment: ${config.app.environment.padEnd(30)} ║
-║  Gemini AI:  ${geminiService.isConfigured ? "✅ Configured" : "⚠️  API Key Needed"}${geminiService.isConfigured ? "".padEnd(23) : "".padEnd(22)}║
+║  AI Providers: Hybrid (Ollama Cloud + Gemini)               ║
 ║  MCP Tools:  ✅ ${mcpClient.getToolDefinitions().length} tools available${" ".padEnd(19)}║
 ╚══════════════════════════════════════════════════════════════╝
 
 📋 API Endpoints:
    • GET    /health                  - Health check
-   • POST   /api/generate            - AI content generation
+   • GET    /api/status              - System status
+   • GET    /api/ai/status           - AI system status
    • POST   /api/chat-with-tools     - Chat with MCP function calling
+   • POST   /api/ollama/chat         - Ollama-only chat
    • POST   /api/mcp/call            - Direct MCP tool execution
    • GET    /api/mcp/tools           - List available tools
 
-🔧 CLI Commands:
-   • npm run chat                   - Regular Gemini chat
-   • npm run chatwmcp               - Chat with MCP tools enabled
+🔧 Available AI Providers:
+   • Ollama Cloud (FREE, 0 RAM)
+   • Ollama Local
+   • Google Gemini
 
-${!geminiService.isConfigured ? "⚠️  REMINDER: Set GEMINI_API_KEY environment variable" : "✅ Ready to process AI requests with WordPress integration!"}
+✅ Ready to process AI requests with WordPress integration!
             `);
         });
     } catch (error) {
