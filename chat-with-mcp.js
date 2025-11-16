@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * Interactive Gemini AI Chat with WordPress MCP Tools
+ * Interactive Gemini AI Chat with WordPress MCP Tools + Exa AI
  * Usage: npm run chatwmcp
  */
 
 const readline = require("readline");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { callExaTool, EXA_TOOLS } = require("./exa-tools");
 
 const MCP_RELAY_URL = "http://localhost:3001";
 const MCP_BEARER_TOKEN = "Bearer uX484&B$k@c@6072&VdTJi#3";
@@ -33,7 +34,17 @@ async function callMCPTool(toolName, args = {}) {
     }
 }
 
-// MCP Tool Definitions
+// Unified tool caller - handles both MCP and Exa tools
+async function callTool(toolName, args = {}) {
+    // Check if it's an Exa tool
+    if (toolName.startsWith("exa_")) {
+        return await callExaTool(toolName, args);
+    }
+    // Otherwise it's a WordPress MCP tool
+    return await callMCPTool(toolName, args);
+}
+
+// MCP Tool Definitions for Gemini format
 const mcpTools = [
     {
         name: "wp_list_plugins",
@@ -187,12 +198,22 @@ const mcpTools = [
     },
 ];
 
+// Combine WordPress MCP tools with Exa tools
+const allTools = [...mcpTools, ...EXA_TOOLS.map((t) => t.function)];
+
 // Initialize Gemini
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
     console.error("❌ Error: GEMINI_API_KEY environment variable not set");
     console.log("Set it with: export GEMINI_API_KEY=your_key_here");
     process.exit(1);
+}
+
+// Check for Exa API key
+const exaEnabled = !!process.env.EXA_API_KEY;
+if (!exaEnabled) {
+    console.log("⚠️  EXA_API_KEY not set - Exa search tools disabled");
+    console.log("   Get one at: https://exa.ai");
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -252,9 +273,12 @@ const rl = readline.createInterface({
 (async () => {
     await selectBestModel();
 
+    // Only include enabled tools
+    const enabledTools = exaEnabled ? allTools : mcpTools;
+
     model = genAI.getGenerativeModel({
         model: selectedModel,
-        tools: [{ functionDeclarations: mcpTools }],
+        tools: [{ functionDeclarations: enabledTools }],
     });
 
     // Chat session
@@ -266,26 +290,38 @@ const rl = readline.createInterface({
         },
     });
 
+    const toolCount = enabledTools.length;
+    const exaStatus = exaEnabled ? "✅" : "❌";
+
     console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║     🤖 GEMINI AI CHAT WITH WORDPRESS MCP TOOLS               ║
+║     🤖 GEMINI AI CHAT WITH MCP + EXA TOOLS                   ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║  Model: ${selectedModel.padEnd(45)} ║
-║  Connected to: ${MCP_RELAY_URL}                      ║
-║  MCP Tools: ${mcpTools.length} WordPress tools available               ║
+║  WordPress MCP: ${MCP_RELAY_URL}                      ║
+║  Exa AI Search: ${exaStatus} ${exaEnabled ? "ENABLED" : "DISABLED (set EXA_API_KEY)"}                      ║
+║  Total Tools: ${toolCount.toString().padEnd(47)} ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║  Commands:                                                    ║
-║    /tools    - List available MCP tools                       ║
+║    /tools    - List available tools                           ║
 ║    /clear    - Clear chat history                             ║
 ║    /exit     - Exit chat                                      ║
 ╚═══════════════════════════════════════════════════════════════╝
 
-Try asking:
+WordPress Examples:
   • "List all my WordPress plugins"
   • "Show me the latest 5 posts"
   • "Create a draft post about AI"
-  • "How many posts do I have?"
-  • "Get user info for user ID 1"
+
+${
+    exaEnabled
+        ? `Exa Search Examples:
+  • "Search for recent AI news using Exa"
+  • "Find articles similar to https://example.com"
+  • "Search for research papers about quantum computing"
+`
+        : ""
+}
 `);
 
     rl.prompt();
@@ -306,6 +342,7 @@ rl.on("line", async (input) => {
     }
 
     if (userInput === "/clear") {
+        const enabledTools = exaEnabled ? allTools : mcpTools;
         chat = model.startChat({
             history: [],
             generationConfig: {
@@ -319,11 +356,25 @@ rl.on("line", async (input) => {
     }
 
     if (userInput === "/tools") {
-        console.log("\n📋 Available MCP Tools:\n");
+        console.log("\n📋 Available Tools:\n");
+
+        console.log("🔧 WordPress MCP Tools:");
         mcpTools.forEach((tool, i) => {
-            console.log(`${i + 1}. ${tool.name}`);
-            console.log(`   ${tool.description}\n`);
+            console.log(`   ${i + 1}. ${tool.name}`);
+            console.log(`      ${tool.description}\n`);
         });
+
+        if (exaEnabled) {
+            console.log("🔍 Exa AI Search Tools:");
+            EXA_TOOLS.forEach((tool, i) => {
+                console.log(`   ${i + 1}. ${tool.function.name}`);
+                console.log(`      ${tool.function.description}\n`);
+            });
+        } else {
+            console.log("🔍 Exa AI Search: ❌ DISABLED");
+            console.log("   Set EXA_API_KEY to enable web search\n");
+        }
+
         rl.prompt();
         return;
     }
@@ -339,16 +390,17 @@ rl.on("line", async (input) => {
         const functionCalls = response.functionCalls();
 
         if (functionCalls && functionCalls.length > 0) {
-            console.log("🔧 Executing MCP tools...\n");
+            console.log("🔧 Executing tools...\n");
 
             // Execute all function calls
             const functionResults = [];
             for (const call of functionCalls) {
+                const toolIcon = call.name.startsWith("exa_") ? "🔍" : "🔧";
                 console.log(
-                    `   → Calling: ${call.name}(${JSON.stringify(call.args)})`,
+                    `   ${toolIcon} Calling: ${call.name}(${JSON.stringify(call.args)})`,
                 );
 
-                const toolResult = await callMCPTool(call.name, call.args);
+                const toolResult = await callTool(call.name, call.args);
 
                 functionResults.push({
                     functionResponse: {
@@ -366,8 +418,15 @@ rl.on("line", async (input) => {
                     } else {
                         console.log(`   ✓ Success`);
                     }
+                } else if (toolResult.results) {
+                    // Exa search results
+                    console.log(
+                        `   ✓ Found ${toolResult.results.length} results`,
+                    );
                 } else if (toolResult.error) {
                     console.log(`   ✗ Error: ${toolResult.error}`);
+                } else {
+                    console.log(`   ✓ Success`);
                 }
             }
 
