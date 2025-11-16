@@ -17,8 +17,6 @@ RUN apk update \
     npm \
     nodejs \
     nano \
-    yarn \
-    nodemon \
     # Create user with matching host UID/GID
     && addgroup -g $USER_GID bitnami \
     && adduser -D -u $USER_UID -G bitnami -s /bin/zsh bitnami \
