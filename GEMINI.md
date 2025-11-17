@@ -191,8 +191,9 @@
 
 1. **Reference main context**: Always consider this base configuration
 2. **Load project context**: Use relevant project files for specific work
-3. **Update task context**: Maintain current-task.md for ongoing work
-4. **Regular updates**: Review and update context files monthly
+3. **Seek out additional guidance**: Actively search for and incorporate relevant guidance files from sub-folders within `/home/bitnami/gemini-project/`.
+4. **Update task context**: Maintain current-task.md for ongoing work
+5. **Regular updates**: Review and update context files monthly
 
 ### Communication Preferences
 
