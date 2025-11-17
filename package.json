@@ -2,6 +2,9 @@
     "name": "gemini-project",
     "version": "1.0.0",
     "description": "Gemini AI project with integrated smart folder management",
+    "overrides": {
+        "tmp": "^0.2.3"
+    },
     "dependencies": {
         "@google/gemini-cli": "^0.14.0",
         "@google/generative-ai": "^0.24.1",
@@ -21,18 +24,17 @@
         "chat": "node chat.js",
         "chatwmcp": "node chat-with-mcp.js",
         "ollamachat": "node chat-ollama.js",
+        "openrouterchat": "node chat-openrouter.mjs",
         "organize": "node smart-folder-manager/cli.js organize",
         "organize:smart": "node smart-folder-manager/cli.js smart",
         "organize:dupes": "node smart-folder-manager/cli.js duplicates",
         "organize:clean": "node smart-folder-manager/cli.js clean",
         "organize:analyze": "node smart-folder-manager/cli.js analyze --detailed",
         "organize:interactive": "node smart-folder-manager/cli.js",
-        "openrouter:start": "openrouter start",
-        "openrouter:status": "openrouter status",
-        "openrouter:code": "openrouter code",
-        "claude:code": "claude-code"
+        "claude:code": "npx claude code"
     },
     "devDependencies": {
+        "@anthropic-ai/claude-code": "^2.0.42",
         "nodemon": "^3.1.11"
     }
 }
