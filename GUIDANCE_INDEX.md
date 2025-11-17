@@ -1,4 +1,4 @@
-# Gemini Guidance Index
+
 
 ## Quick Navigation
 
