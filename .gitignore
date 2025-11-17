@@ -57,3 +57,7 @@ gemini-for-wp/
 .gemini/
 gha-creds-*.json
 gemini-docs
+
+# Openrouter Chat History
+.openrouter-history.json
+.openrouter-history
