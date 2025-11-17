@@ -1,0 +1,358 @@
+import fetch from "node-fetch";
+import readline from "readline";
+import chalk from "chalk";
+import fs from "fs-extra";
+import path from "path";
+
+// Configuration
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const HISTORY_FILE = path.join(process.cwd(), ".openrouter-history.json");
+
+// Available models (Free models listed first)
+const MODELS = {
+    "sherlock-think": "openrouter/sherlock-think-alpha",
+    "sherlock-dash": "openrouter/sherlock-dash-alpha",
+    "gemini-flash": "google/gemini-2.5-flash",
+    "llama-70b": "meta-llama/llama-3.1-70b-instruct",
+    "qwen-72b": "qwen/qwen-2.5-72b-instruct",
+    "claude-sonnet": "anthropic/claude-3.5-sonnet",
+    "claude-opus": "anthropic/claude-opus-4.1",
+    gpt4: "openai/gpt-4-turbo",
+    gpt4o: "openai/gpt-4o",
+    deepseek: "deepseek/deepseek-chat",
+    "gemini-pro": "google/gemini-2.5-pro",
+};
+
+class OpenRouterChat {
+    constructor(model = "anthropic/claude-3.5-sonnet") {
+        this.model = model;
+        this.conversationHistory = [];
+        this.loadHistory();
+    }
+
+    async loadHistory() {
+        try {
+            if (await fs.pathExists(HISTORY_FILE)) {
+                const data = await fs.readJSON(HISTORY_FILE);
+                this.conversationHistory = data.history || [];
+                console.log(
+                    chalk.dim(
+                        `Loaded ${this.conversationHistory.length} previous messages`,
+                    ),
+                );
+            }
+        } catch (error) {
+            console.log(chalk.yellow("Starting fresh conversation"));
+        }
+    }
+
+    async saveHistory() {
+        try {
+            await fs.writeJSON(
+                HISTORY_FILE,
+                {
+                    history: this.conversationHistory,
+                    lastUpdated: new Date().toISOString(),
+                },
+                { spaces: 2 },
+            );
+        } catch (error) {
+            console.error(chalk.red("Failed to save history:", error.message));
+        }
+    }
+
+    async chat(message, streamResponse = true) {
+        if (!OPENROUTER_API_KEY) {
+            throw new Error(
+                "OPENROUTER_API_KEY environment variable is not set",
+            );
+        }
+
+        // Add user message to history
+        this.conversationHistory.push({
+            role: "user",
+            content: message,
+        });
+
+        try {
+            const response = await fetch(OPENROUTER_URL, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "http://localhost:3000",
+                    "X-Title": "Gemini Project - OpenRouter Chat",
+                },
+                body: JSON.stringify({
+                    model: this.model,
+                    messages: this.conversationHistory,
+                    stream: streamResponse,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(
+                    `OpenRouter API Error: ${error.error?.message || response.statusText}`,
+                );
+            }
+
+            if (streamResponse) {
+                return await this.handleStreamResponse(response);
+            } else {
+                const data = await response.json();
+                const assistantMessage = data.choices[0].message.content;
+
+                // Add assistant response to history
+                this.conversationHistory.push({
+                    role: "assistant",
+                    content: assistantMessage,
+                });
+
+                await this.saveHistory();
+                return assistantMessage;
+            }
+        } catch (error) {
+            console.error(chalk.red("Error:", error.message));
+            // Remove the failed user message
+            this.conversationHistory.pop();
+            throw error;
+        }
+    }
+
+    async handleStreamResponse(response) {
+        let fullResponse = "";
+        const reader = response.body;
+
+        console.log(chalk.cyan("\nAssistant: "));
+
+        reader.on("data", (chunk) => {
+            const lines = chunk
+                .toString()
+                .split("\n")
+                .filter((line) => line.trim() !== "");
+
+            for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                    const data = line.slice(6);
+                    if (data === "[DONE]") continue;
+
+                    try {
+                        const parsed = JSON.parse(data);
+                        const content = parsed.choices[0]?.delta?.content;
+                        if (content) {
+                            process.stdout.write(content);
+                            fullResponse += content;
+                        }
+                    } catch (e) {
+                        // Skip invalid JSON
+                    }
+                }
+            }
+        });
+
+        return new Promise((resolve, reject) => {
+            reader.on("end", async () => {
+                console.log("\n");
+
+                // Add assistant response to history
+                this.conversationHistory.push({
+                    role: "assistant",
+                    content: fullResponse,
+                });
+
+                await this.saveHistory();
+                resolve(fullResponse);
+            });
+
+            reader.on("error", reject);
+        });
+    }
+
+    clearHistory() {
+        this.conversationHistory = [];
+        if (fs.existsSync(HISTORY_FILE)) {
+            fs.unlinkSync(HISTORY_FILE);
+        }
+        console.log(chalk.green("Conversation history cleared"));
+    }
+
+    changeModel(newModel) {
+        this.model = newModel;
+        console.log(chalk.green(`Model changed to: ${newModel}`));
+    }
+
+    showHistory() {
+        console.log(chalk.cyan("\n=== Conversation History ==="));
+        this.conversationHistory.forEach((msg, idx) => {
+            const role =
+                msg.role === "user"
+                    ? chalk.blue("User")
+                    : chalk.green("Assistant");
+            const preview =
+                msg.content.substring(0, 100) +
+                (msg.content.length > 100 ? "..." : "");
+            console.log(`${idx + 1}. ${role}: ${preview}`);
+        });
+        console.log(chalk.cyan("=========================\n"));
+    }
+}
+
+// Interactive CLI
+async function startInteractiveCLI() {
+    console.log(chalk.bold.cyan("\n🤖 OpenRouter Chat CLI"));
+    console.log(
+        chalk.dim("Secure direct API integration - No vulnerabilities!\n"),
+    );
+
+    // Select model
+    console.log(chalk.yellow("Available models:"));
+    Object.entries(MODELS).forEach(([key, value]) => {
+        console.log(chalk.dim(`  ${key}: ${value}`));
+    });
+
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+
+    const selectedModel = await new Promise((resolve) => {
+        rl.question(
+            chalk.cyan("\nSelect model (or press enter for claude-sonnet): "),
+            (answer) => {
+                const model = MODELS[answer.trim()] || MODELS["claude-sonnet"];
+                resolve(model);
+            },
+        );
+    });
+
+    const chat = new OpenRouterChat(selectedModel);
+    console.log(chalk.green(`\nUsing model: ${selectedModel}`));
+    console.log(
+        chalk.dim("Commands: /help, /clear, /history, /model, /exit\n"),
+    );
+
+    const askQuestion = () => {
+        rl.question(chalk.blue("\nYou: "), async (input) => {
+            const message = input.trim();
+
+            if (!message) {
+                askQuestion();
+                return;
+            }
+
+            // Handle commands
+            if (message.startsWith("/")) {
+                const command = message.toLowerCase();
+
+                if (command === "/exit" || command === "/quit") {
+                    console.log(chalk.yellow("Goodbye!"));
+                    rl.close();
+                    process.exit(0);
+                } else if (command === "/clear") {
+                    chat.clearHistory();
+                    askQuestion();
+                } else if (command === "/history") {
+                    chat.showHistory();
+                    askQuestion();
+                } else if (command.startsWith("/model")) {
+                    const modelKey = command.split(" ")[1];
+                    if (modelKey && MODELS[modelKey]) {
+                        chat.changeModel(MODELS[modelKey]);
+                    } else {
+                        console.log(chalk.yellow("Available models:"));
+                        Object.keys(MODELS).forEach((key) =>
+                            console.log(`  /${key}`),
+                        );
+                    }
+                    askQuestion();
+                } else if (command === "/help") {
+                    console.log(chalk.cyan("\nAvailable commands:"));
+                    console.log(chalk.dim("  /help     - Show this help"));
+                    console.log(
+                        chalk.dim("  /clear    - Clear conversation history"),
+                    );
+                    console.log(
+                        chalk.dim("  /history  - Show conversation history"),
+                    );
+                    console.log(chalk.dim("  /model    - Change model"));
+                    console.log(chalk.dim("  /exit     - Exit chat\n"));
+                    askQuestion();
+                } else {
+                    console.log(
+                        chalk.red(
+                            "Unknown command. Type /help for available commands.",
+                        ),
+                    );
+                    askQuestion();
+                }
+                return;
+            }
+
+            try {
+                await chat.chat(message, true);
+                askQuestion();
+            } catch (error) {
+                console.error(
+                    chalk.red("Failed to get response:", error.message),
+                );
+                askQuestion();
+            }
+        });
+    };
+
+    askQuestion();
+}
+
+// Single message mode (for scripting)
+async function singleMessage(message, model = "anthropic/claude-3.5-sonnet") {
+    const chat = new OpenRouterChat(model);
+    chat.conversationHistory = []; // Don't load history for single messages
+
+    try {
+        const response = await chat.chat(message, false);
+        console.log(chalk.cyan("\nResponse:"));
+        console.log(response);
+        return response;
+    } catch (error) {
+        console.error(chalk.red("Error:", error.message));
+        process.exit(1);
+    }
+}
+
+// Main execution
+const args = process.argv.slice(2);
+
+if (args.length === 0) {
+    // Interactive mode
+    startInteractiveCLI();
+} else if (args[0] === "--message" || args[0] === "-m") {
+    // Single message mode
+    const message = args.slice(1).join(" ");
+    if (!message) {
+        console.error(
+            chalk.red(
+                'Please provide a message: node chat-openrouter.js -m "your message"',
+            ),
+        );
+        process.exit(1);
+    }
+    singleMessage(message);
+} else if (args[0] === "--model" && args[1]) {
+    // Single message with specific model
+    const modelKey = args[1];
+    const message = args.slice(2).join(" ");
+    if (!MODELS[modelKey]) {
+        console.error(chalk.red(`Unknown model: ${modelKey}`));
+        console.log("Available models:", Object.keys(MODELS).join(", "));
+        process.exit(1);
+    }
+    singleMessage(message, MODELS[modelKey]);
+} else {
+    // Treat everything as a message
+    const message = args.join(" ");
+    singleMessage(message);
+}
+
+export { OpenRouterChat, MODELS };
