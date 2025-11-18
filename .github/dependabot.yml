@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: &quot;npm&quot;
+    directory: &quot;/&quot;
+    schedule:
+      interval: &quot;daily&quot;
+    open-pull-requests-limit: 10
+    rebase-strategy: &quot;auto&quot;
+    labels:
+      - &quot;dependencies&quot;
+    reviewers:
+      - &quot;github-actions[bot]&quot;  # Optional: auto-review or replace with your username
+    assignees:
+      - &quot;github-actions[bot]&quot;  # Optional
+    commit-message:
+      prefix: &quot;chore(deps):&quot;
+    groups:
+      npm-dependencies:
+        patterns:
+          - &quot;*&quot;
+        update-types:
+          - &quot;security&quot;
+          - &quot;patch&quot;
+          - &quot;minor&quot;
+          - &quot;major&quot;
