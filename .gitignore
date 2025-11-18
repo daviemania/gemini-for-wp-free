@@ -19,6 +19,7 @@ pm2-out.log*
 backups/
 .Backup
 .bak/
+*.bak
 
 # PM2 runtime files
 .pm2/
@@ -26,6 +27,7 @@ backups/
 # Keys
 keys/
 .pem/
+*.pem
 
 # Environment variables
 .env
