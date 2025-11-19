@@ -7,7 +7,7 @@ This document outlines common WP-CLI commands and best practices for interacting
 Always use the `wpb` alias (or `wp --path=/opt/bitnami/wordpress/`) to ensure commands target the correct WordPress installation.
 
 ```bash
-wpb <command> [options]
+wp --path=/opt/bitnami/wordpress/<command> [options]
 ```
 
 ## Common Commands
@@ -16,50 +16,50 @@ wpb <command> [options]
 
 - **List all subsites:**
   ```bash
-  sudo wpb site list --skip-plugins
+  sudo wp --path=/opt/bitnami/wordpress/site list --skip-plugins
   ```
 
 ### Post Management
 
 - **List posts for a specific subsite:**
   ```bash
-  sudo wpb post list --url=<subsite-url> --skip-plugins
+  sudo wp --path=/opt/bitnami/wordpress/post list --url=<subsite-url> --skip-plugins
   ```
 
 - **Update a post (example):**
   ```bash
-  sudo wpb post update <post-id> --post_title="New Title" --post_content="New content" --post_status="pending" --blog_id=<blog-id> --skip-plugins
+  sudo wp --path=/opt/bitnami/wordpress/post update <post-id> --post_title="New Title" --post_content="New content" --post_status="pending" --blog_id=<blog-id> --skip-plugins
   ```
 
 ### Plugin Management
 
 - **List installed plugins:**
   ```bash
-  sudo wpb plugin list --skip-plugins
+  sudo wp --path=/opt/bitnami/wordpress/plugin list --skip-plugins
   ```
 
 - **Activate a plugin (example):**
   ```bash
-  sudo wpb plugin activate <plugin-name> --skip-plugins
+  sudo wp --path=/opt/bitnami/wordpress/plugin activate <plugin-name> --skip-plugins
   ```
 
 - **Deactivate a plugin (example):**
   ```bash
-  sudo wpb plugin deactivate <plugin-name> --skip-plugins
+  sudo wp --path=/opt/bitnami/wordpress/plugin deactivate <plugin-name> --skip-plugins
   ```
 
 ### User Management
 
 - **List users:**
   ```bash
-  sudo wpb user list --skip-plugins
+  sudo wp --path=/opt/bitnami/wordpress/user list --skip-plugins
   ```
 
 ### Database Management
 
 - **Run a direct database query (use with extreme caution on live sites):**
   ```bash
-  sudo wpb db query "SELECT option_value FROM wp_options WHERE option_name = 'blogname';" --skip-plugins
+  sudo wp --path=/opt/bitnami/wordpress/db query "SELECT option_value FROM wp_options WHERE option_name = 'blogname';" --skip-plugins
   ```
 
 ## Important Notes
