@@ -7,14 +7,15 @@
         "glob": "^11.1.0"
     },
     "dependencies": {
+        "@anthropic-ai/claude-code": "^2.0.47",
         "@google/generative-ai": "^0.24.1",
-        "@musistudio/claude-code-router": "^1.0.58",
         "chalk": "^4.1.2",
         "exa-js": "^2.0.3",
         "fs-extra": "^11.3.2",
         "inquirer": "^8.2.0",
         "node-cron": "^4.2.1",
         "node-fetch": "^3.3.2",
+        "npm": "^11.6.3",
         "ollama": "^0.6.3",
         "simple-git": "^3.30.0"
     },
@@ -31,7 +32,7 @@
         "organize:clean": "node smart-folder-manager/cli.js clean",
         "organize:analyze": "node smart-folder-manager/cli.js analyze --detailed",
         "organize:interactive": "node smart-folder-manager/cli.js",
-        "claude:code": "PREEMPT_OUTPUT_CONTROL=1 TERM=xterm-256color npx claude code"
+        "claude:code": "npx claude code"
     },
     "devDependencies": {
         "nodemon": "^3.1.11"
