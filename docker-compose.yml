@@ -1,0 +1,34 @@
+services:
+  app:
+    image: node:20
+    command:
+      - sh
+      - -c
+      - |
+        apt-get update && apt-get install -y zsh tmux fish &&
+        cp -rf /home/bitnami/.zshrc /root/.zshrc &&
+        cp -rf /home/bitnami/.tmux.conf /root/.tmux.conf &&
+        cp -rf /home/bitnami/.config/fish /root/.config/ &&
+        echo 'alias fishy="exec fish"' >> /root/.zshrc &&
+        tmux new-session -d -s ai-dev 'sleep infinity' &&
+        chsh root -s /bin/zsh &&
+        exec sleep infinity
+    volumes:
+      - .:/workspace:cached
+      - /home/bitnami:/home/bitnami:cached
+      - /opt/bitnami:/opt/bitnami:cached
+      - /bitnami:/bitnami:cached
+      - npm-cache:/home/node/.npm
+      - .env:/workspace/.env:ro  # Mirror full .env (keys inside)
+    working_dir: /workspace
+    network_mode: host  # Unlimited connectivity
+    user: root  # Full utilities (sudo, WP CLI)
+    env_file:
+      - .env  # Auto-load all keys (strips 'export ')
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+    restart: unless-stopped
+volumes:
+  npm-cache:
