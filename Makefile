@@ -1,52 +1,38 @@
-.PHONY: build run shell start stop clean rebuild help
+.PHONY: run shell start stop clean rebuild help
 
-# Default target
 help:
-	@echo "Available commands:"
-	@echo "  make build    - Build the Docker image"
-	@echo "  make start    - Start persistent container (for IDEs)"
-	@echo "  make shell    - Open a shell in the container"
-	@echo "  make run      - Run temporary container interactively"
-	@echo "  make stop     - Stop running containers"
-	@echo "  make clean    - Remove the image and container"
-	@echo "  make rebuild  - Clean and rebuild"
+	@echo "Gemini-Project Docker Commands (via docker-compose):"
+	@echo "  make shell     🐚  - Connect to running container (zsh)"
+	@echo "  make start     🚀  - Start detached"
+	@echo "  make stop      ⏹️   - Stop (keep vols)"
+	@echo "  make clean     🧹  - Nuke containers/volumes"
+	@echo "  make rebuild   🔨  - Clean + rebuild"
+	@echo "  make run       ⚡  - Temp interactive run"
 
-# Build the Docker image using buildx with host networking
-build:
-	@echo "Building gemini-project image..."
-	docker buildx build --load -t gemini-project .devcontainer/
-	@echo "✓ Build complete!"
+start:
+	@echo "🚀 Starting..."
+	docker compose up -d
+	@echo "✓ Ready: docker compose ps"
 
-# Start a persistent container in the background
-start: build
-	@if docker ps -a | grep -q gemini-project-dev; then \
-		echo "Container already exists. Starting..."; \
-		docker start gemini-project-dev 2>/dev/null || true; \
-	else \
-		echo "Creating new persistent container..."; \
-		docker run -d -v $(PWD):/gemini-project --name gemini-project-dev gemini-project sleep infinity; \
-	fi
-	@echo "✓ Container is running"
-
-# Run the container interactively (temporary)
-run: build
-	docker run -it --rm -v $(PWD):/gemini-project --name gemini-project-temp gemini-project
-
-# Open a shell in the persistent container
 shell: start
-	@docker exec -it gemini-project-dev /bin/zsh || true
+	@echo "🐚 Shelling in (zsh/tmux/fish ready)..."
+	docker compose exec app zsh
 
-# Stop all running gemini-project containers
+run:
+	docker compose run --rm app
+
 stop:
-	@docker stop gemini-project-dev 2>/dev/null || true
-	@echo "✓ Container stopped"
+	@echo "⏹️ Stopping..."
+	docker compose down
+	@echo "✓ Stopped"
 
-# Remove the Docker image and container
 clean:
-	@docker stop gemini-project-dev 2>/dev/null || true
-	@docker rm gemini-project-dev 2>/dev/null || true
-	@docker rmi gemini-project 2>/dev/null || true
-	@echo "✓ Image and container removed"
+	@echo "🧹 Cleaning..."
+	docker compose down -v --remove-orphans || true
+	docker volume prune -f || true
+	@echo "✓ Volumes pruned"
 
-# Clean and rebuild
-rebuild: clean build
+rebuild: clean
+	@echo "🔨 Rebuilding..."
+	docker compose up --build -d
+	@echo "✓ Fresh build running"
