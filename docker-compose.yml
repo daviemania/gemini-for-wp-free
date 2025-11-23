@@ -1,34 +1,62 @@
 services:
-  app:
-    image: node:20
-    command:
-      - sh
-      - -c
-      - |
-        apt-get update && apt-get install -y zsh tmux fish &&
-        cp -rf /home/bitnami/.zshrc /root/.zshrc &&
-        cp -rf /home/bitnami/.tmux.conf /root/.tmux.conf &&
-        cp -rf /home/bitnami/.config/fish /root/.config/ &&
-        echo 'alias fishy="exec fish"' >> /root/.zshrc &&
-        tmux new-session -d -s ai-dev 'sleep infinity' &&
-        chsh root -s /bin/zsh &&
-        exec sleep infinity
-    volumes:
-      - .:/workspace:cached
-      - /home/bitnami:/home/bitnami:cached
-      - /opt/bitnami:/opt/bitnami:cached
-      - /bitnami:/bitnami:cached
-      - npm-cache:/home/node/.npm
-      - .env:/workspace/.env:ro  # Mirror full .env (keys inside)
-    working_dir: /workspace
-    network_mode: host  # Unlimited connectivity
-    user: root  # Full utilities (sudo, WP CLI)
-    env_file:
-      - .env  # Auto-load all keys (strips 'export ')
-    deploy:
-      resources:
-        limits:
-          memory: 3G
-    restart: unless-stopped
+    gemini-dev:
+        build:
+            context: .
+            dockerfile: .devcontainer/Dockerfile
+            args:
+                USER_UID: 1000
+                USER_GID: 1000
+
+        container_name: gemini-project-dev
+
+        # Use tmux session for long-running processes
+        command: >
+            sh -c "tmux new-session -d -s ai-dev 'sleep infinity' &&
+                   exec sleep infinity"
+
+        volumes:
+            # Main workspace
+            - .:/gemini-project:cached
+            # Preserve npm cache
+            - npm-cache:/home/bitnami/.npm-global
+            # Mount .env file
+            - ./.env:/gemini-project/.env:ro
+
+        working_dir: /gemini-project
+
+        # Run as bitnami user (matching host UID/GID)
+        user: bitnami
+
+        # Load environment variables
+        env_file:
+            - .env
+
+        # Host networking for unrestricted access
+        network_mode: host
+
+        # Resource limits
+        deploy:
+            resources:
+                limits:
+                    memory: 3G
+                    cpus: "2.0"
+                reservations:
+                    memory: 512M
+
+        # Restart policy
+        restart: unless-stopped
+
+        # Keep stdin open and allocate TTY for tmux
+        stdin_open: true
+        tty: true
+
+        # Health check
+        healthcheck:
+            test: ["CMD", "tmux", "ls"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+
 volumes:
-  npm-cache:
+    npm-cache:
+        driver: local
