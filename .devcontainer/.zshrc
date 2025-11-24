@@ -138,3 +138,6 @@ if [[ -o interactive ]]; then
 fi
 # Super-important CCR Router Alias
 alias ccr="npx ccr"
+
+# Gitlab-ci-ls
+export PATH="$HOME/.cargo/bin:$PATH"
