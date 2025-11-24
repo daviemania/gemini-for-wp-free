@@ -62,6 +62,17 @@ RUN su - bitnami -c ' \
     npm install -g @google/gemini-cli && \
     # Install Claude Code Router
     npm install -g @musistudio/claude-code-router && \
+    # Install Express
+    npm install -g express && \
+    # Install Cors
+    npm install -g cors && \
+    # Install dotenv
+    npm install -g dotenv && \
+    # Install other Dependencies
+    npm install -g simple-git && \
+    npm install -g fs-extra && \
+    npm install -g node-cron && \
+    npm install -g archiver && \
     # Install Claude Code
     npm install -g @anthropic-ai/claude-code && \
     # Create symlinks for convenience

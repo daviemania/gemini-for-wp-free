@@ -24,8 +24,6 @@ alias ccr='claude-code-router'
 alias gemini='generative-ai-cli'
 alias claude='claude-code'
 
-echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >>~/.zshrc
-
 # ============================================
 # Git Aliases
 # ============================================
@@ -138,3 +136,5 @@ if [[ -o interactive ]]; then
     echo "Environment: Docker Container"
   fi
 fi
+# Super-important CCR Router Alias
+alias ccr="npx ccr"
