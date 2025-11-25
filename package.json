@@ -2,7 +2,6 @@
     "name": "gemini-project",
     "version": "1.0.0",
     "description": "Gemini AI project with integrated smart folder management",
-    "type": "module",
     "overrides": {
         "tmp": "^0.2.3",
         "glob": "^11.1.0"
