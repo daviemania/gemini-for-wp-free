@@ -15,8 +15,8 @@ updates:
       groups:
           npm-dependencies:
               patterns:
-                  - "*"
               update-types:
+                  - "security"
                   - "patch"
                   - "minor"
                   - "major"
