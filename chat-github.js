@@ -1,21 +1,72 @@
-import ModelClient, { isUnexpected } from "@azure-rest/ai-inference";
-import { AzureKeyCredential } from "@azure/core-auth";
-import inquirer from "inquirer";
-import chalk from "chalk";
-import fs from "fs-extra";
-import path from "path";
-import yaml from "yaml";
-import fetch from "node-fetch";
+#!/usr/bin/env node
+
+/**
+ * GitHub Models Chat - Advanced Edition with MCP Integration
+ * CommonJS version (no ES modules required)
+ * Usage: npm run githubchat
+ */
+
+const ModelClient = require("@azure-rest/ai-inference").default;
+const { isUnexpected } = require("@azure-rest/ai-inference");
+const { AzureKeyCredential } = require("@azure/core-auth");
+const inquirer = require("inquirer");
+const chalk = require("chalk");
+const fs = require("fs-extra");
+const path = require("path");
+const yaml = require("yaml");
+const https = require("https");
+const { URL } = require("url");
 
 const token = process.env["GITHUB_MODELS_TOKEN"];
 const endpoint = "https://models.github.ai/inference";
+
+// Simple fetch implementation using https
+function fetch(url, options = {}) {
+    return new Promise((resolve, reject) => {
+        const parsedUrl = new URL(url);
+
+        const reqOptions = {
+            hostname: parsedUrl.hostname,
+            port: parsedUrl.port || 443,
+            path: parsedUrl.pathname + parsedUrl.search,
+            method: options.method || "GET",
+            headers: options.headers || {},
+        };
+
+        const req = https.request(reqOptions, (res) => {
+            let data = "";
+
+            res.on("data", (chunk) => {
+                data += chunk;
+            });
+
+            res.on("end", () => {
+                resolve({
+                    ok: res.statusCode >= 200 && res.statusCode < 300,
+                    status: res.statusCode,
+                    statusText: res.statusMessage,
+                    json: async () => JSON.parse(data),
+                    text: async () => data,
+                });
+            });
+        });
+
+        req.on("error", reject);
+
+        if (options.body) {
+            req.write(options.body);
+        }
+
+        req.end();
+    });
+}
 
 // MCP Configuration
 const MCP_ENDPOINT = "http://localhost:3001/mcp";
 const MCP_WP_ENDPOINT = "https://maniainc.com/wp-json/mcp/v1/sse";
 const MCP_AUTH_TOKEN = "uX484&B$k@c@6072&VdTJi#3";
 
-// Load configuration from YAML (synchronous in main)
+// Load configuration from YAML
 let config = {};
 let AVAILABLE_MODELS = {};
 const configPath = path.join(process.cwd(), "github-chat.prompt.yml");
@@ -92,7 +143,6 @@ function formatObject(obj, indent = "") {
     if (obj === undefined) return chalk.gray("undefined");
 
     if (typeof obj !== "object") {
-        // Escape and format primitive values
         if (typeof obj === "string") {
             return chalk.white(
                 `"${obj.replace(/"/g, '\\"').replace(/\n/g, "\\n")}"`,
@@ -106,7 +156,6 @@ function formatObject(obj, indent = "") {
         return `[${obj.map((item) => formatObject(item)).join(", ")}]`;
     }
 
-    // Format object with proper indentation
     const keys = Object.keys(obj);
     if (keys.length === 0) return chalk.gray("{}");
 
@@ -122,7 +171,6 @@ function formatObject(obj, indent = "") {
         return `${formattedKey}: ${formatObject(value)}`;
     });
 
-    // For compact display in lists, show on one line if short
     if (indent === "" && entries.join(", ").length < 80) {
         return `{ ${entries.join(", ")} }`;
     }
@@ -229,8 +277,6 @@ async function chatWithStreaming(userMessage, customSystemPrompt = null) {
     for await (const chunk of stream) {
         buffer += chunk.toString();
         const lines = buffer.split("\n");
-
-        // Keep the last incomplete line in the buffer
         buffer = lines.pop() || "";
 
         for (const line of lines) {
@@ -249,7 +295,7 @@ async function chatWithStreaming(userMessage, customSystemPrompt = null) {
                     fullResponse += content;
                 }
             } catch (e) {
-                // Skip parsing errors for malformed JSON
+                // Skip parsing errors
             }
         }
     }
@@ -859,7 +905,7 @@ Examples:
                     } catch (innerError) {
                         console.error(
                             chalk.red("\n❌ Error processing MCP results:"),
-                            innerError.message,
+                            innerError.message || innerError,
                         );
                         console.log(
                             chalk.yellow(
@@ -873,11 +919,16 @@ Examples:
                 }
             }
         } catch (error) {
-            console.error(chalk.red("\n❌ Error:"), error.message, "\n");
+            console.error(
+                chalk.red("\n❌ Error:"),
+                error.message || error,
+                "\n",
+            );
 
             if (
-                error.message.includes("401") ||
-                error.message.includes("unauthorized")
+                error.message &&
+                (error.message.includes("401") ||
+                    error.message.includes("unauthorized"))
             ) {
                 console.log(
                     chalk.yellow(
@@ -890,6 +941,6 @@ Examples:
 }
 
 main().catch((err) => {
-    console.error(chalk.red("\n❌ Fatal error:"), err);
+    console.error(chalk.red("\n❌ Fatal error:"), err.message || err);
     process.exit(1);
 });
