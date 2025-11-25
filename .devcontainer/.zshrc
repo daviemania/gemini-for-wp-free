@@ -21,7 +21,7 @@ export TERM="xterm-256color"
 # CLI Tool Aliases
 # ============================================
 alias ccr='claude-code-router'
-alias gemini='generative-ai-cli'
+alias gemini='npx gemini'
 alias claude='claude-code'
 
 # ============================================
