@@ -18,6 +18,8 @@ pm2-out.log*
 # Backup directories
 backups/
 .Backup
+*.backup
+.backup
 .bak/
 *.bak
 
