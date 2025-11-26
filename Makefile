@@ -111,6 +111,10 @@ prune: clean
 rebuild: clean build start
 	@echo "✓ Rebuild complete - container running"
 
+# Deep clean, rebuild image from scratch, and start
+super-rebuild: prune build start
+	@echo "✨ SUPER REBUILD COMPLETE - all old data and caches removed. Container running."
+
 # Quick test that everything works
 test: build
 	@echo "🧪 Testing container..."

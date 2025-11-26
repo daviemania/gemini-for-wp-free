@@ -10,11 +10,11 @@
         "reveal": "always"
     },
     {
-        "label": "⏹️ Stop Container",
+        "label": "📺 Attach to Tmux",
         "command": "make",
-        "args": ["stop"],
-        "use_new_terminal": false,
-        "allow_concurrent_runs": false,
+        "args": ["tmux"],
+        "use_new_terminal": true,
+        "allow_concurrent_runs": true,
         "reveal": "always"
     },
     {
@@ -26,7 +26,39 @@
         "reveal": "always"
     },
     {
-        "label": "🧹 Clean Container",
+        "label": "⏹️ Stop Container",
+        "command": "make",
+        "args": ["stop"],
+        "use_new_terminal": false,
+        "allow_concurrent_runs": false,
+        "reveal": "always"
+    },
+    {
+        "label": "📋 Logs",
+        "command": "make",
+        "args": ["logs"],
+        "use_new_terminal": true,
+        "allow_concurrent_runs": true,
+        "reveal": "always"
+    },
+    {
+        "label": "🔨 Rebuild Container",
+        "command": "make",
+        "args": ["rebuild"],
+        "use_new_terminal": true,
+        "allow_concurrent_runs": false,
+        "reveal": "always"
+    },
+    {
+        "label": "✨ Super Rebuild (Clean Cache)",
+        "command": "make",
+        "args": ["super-rebuild"],
+        "use_new_terminal": true,
+        "allow_concurrent_runs": false,
+        "reveal": "always"
+    },
+    {
+        "label": "🧹 Clean Containers & Volumes",
         "command": "make",
         "args": ["clean"],
         "use_new_terminal": true,
@@ -34,9 +66,9 @@
         "reveal": "always"
     },
     {
-        "label": "🔨 Rebuild Container",
+        "label": "🗑️ Deep Prune & Cache Clear",
         "command": "make",
-        "args": ["rebuild"],
+        "args": ["prune"],
         "use_new_terminal": true,
         "allow_concurrent_runs": false,
         "reveal": "always"
