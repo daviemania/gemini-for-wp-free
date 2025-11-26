@@ -75,9 +75,10 @@ RUN su - bitnami -c ' \
     npm install -g archiver && \
     # Install Claude Code
     npm install -g @anthropic-ai/claude-code && \
-    # Create symlinks for convenience
-    ln -sf /home/bitnami/.npm-global/bin/claude-code-router /home/bitnami/.npm-global/bin/ccr \
-'
+    # Correct CCR Symlink for Claude Code Router
+    # ADD THIS LINE to define the ccr alias permanently in the Dockerfile
+    echo 'alias ccr="node /home/bitnami/.npm-global/lib/node_modules/@musistudio/claude-code-router/dist/cli.js"' >> ~/.zshrc \
+    '
 
 # Update PATH for bitnami user
 RUN echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> /home/bitnami/.zshrc
