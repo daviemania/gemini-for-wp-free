@@ -7,22 +7,22 @@
         "glob": "^11.1.0"
     },
     "dependencies": {
-        "@anthropic-ai/claude-code": "^2.0.47",
+        "@anthropic-ai/claude-code": "^2.0.54",
         "@azure-rest/ai-inference": "latest",
         "@azure/core-auth": "latest",
         "@azure/core-sse": "latest",
         "@google/generative-ai": "^0.24.1",
-        "chalk": "^4.1.2",
-        "exa-js": "^2.0.3",
+        "chalk": "^5.6.2",
+        "exa-js": "^2.0.9",
         "express": "^5.1.0",
         "fs-extra": "^11.3.2",
-        "inquirer": "^8.2.0",
+        "inquirer": "^13.0.1",
         "node-cron": "^4.2.1",
         "node-fetch": "^3.3.2",
-        "npm": "^11.6.3",
+        "npm": "^11.6.4",
         "ollama": "^0.6.3",
         "simple-git": "^3.30.0",
-        "commander": "^12.1.0",
+        "commander": "^14.0.2",
         "yaml": "^2.8.1"
     },
     "devDependencies": {
