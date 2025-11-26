@@ -1,5 +1,6 @@
 {
     "name": "Gemini Project Dev",
+    "description": "A project to integrate Gemini and other popular and useful AI agents and cli tools into a WordPress install",
 
     "build": {
         "dockerfile": "Dockerfile",
