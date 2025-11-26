@@ -75,12 +75,13 @@ RUN su - bitnami -c ' \
     npm install -g archiver && \
     # Install Claude Code
     npm install -g @anthropic-ai/claude-code && \
-    # Create symlinks for convenience
-    ln -sf /home/bitnami/.npm-global/bin/claude-code-router /home/bitnami/.npm-global/bin/ccr \
 '
 
 # Update PATH for bitnami user
 RUN echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> /home/bitnami/.zshrc
+
+# Add CCR alias to .zshrc (after Oh My Zsh installation)
+RUN echo 'alias ccr="$HOME/.npm-global/lib/node_modules/@musistudio/claude-code-router/dist/cli.js"' >> /home/bitnami/.zshrc
 
 # Create necessary directories
 RUN mkdir -p /home/bitnami/.config/fish \
