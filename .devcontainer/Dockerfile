@@ -16,6 +16,7 @@ ENV TERM=xterm-256color \
 RUN apk update && apk add --no-cache \
     # Core utilities
     git \
+    git-lfs \
     curl \
     wget \
     ca-certificates \
