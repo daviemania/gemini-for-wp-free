@@ -1,79 +1,24 @@
 {
-    "name": "Gemini Project Dev",
-
+    "name": "Gemini Project",
     "build": {
         "dockerfile": "Dockerfile",
-        "args": {
-            "USER_UID": "1000",
-            "USER_GID": "1000"
-        },
         "options": ["--network=host", "--dns=8.8.8.8"]
     },
-
-    "runArgs": ["--env-file=${localWorkspaceFolder}/.env", "--init"],
-
-    "mounts": [
-        "source=${localWorkspaceFolder},target=/gemini-project,type=bind,consistency=cached"
-    ],
-
+    "runArgs": ["--env-file", "/gemini-project/.env"],
     "workspaceFolder": "/gemini-project",
-    "workspaceMount": "source=${localWorkspaceFolder},target=/gemini-project,type=bind,consistency=cached",
-
+    "workspaceMount": "source=${localWorkspaceFolder},target=/gemini-project,type=bind",
     "overrideCommand": false,
     "shutdownAction": "stopContainer",
-
     "remoteUser": "bitnami",
     "containerUser": "bitnami",
-    "updateRemoteUserUID": true,
-
     "customizations": {
         "vscode": {
-            "extensions": [
-                "ms-python.python",
-                "ms-vscode.makefile-tools",
-                "dbaeumer.vscode-eslint",
-                "esbenp.prettier-vscode"
-            ],
+            "extensions": ["ms-python.python", "ms-vscode.makefile-tools"],
             "settings": {
-                "terminal.integrated.defaultProfile.linux": "zsh",
-                "terminal.integrated.profiles.linux": {
-                    "zsh": {
-                        "path": "/bin/zsh"
-                    },
-                    "tmux": {
-                        "path": "/usr/bin/tmux",
-                        "args": ["new-session", "-A", "-s", "main"]
-                    }
-                },
-                "files.eol": "\n",
-                "editor.formatOnSave": true
+                "terminal.integrated.defaultProfile.linux": "zsh"
             }
         }
     },
-
-    "forwardPorts": [3000, 8080, 5173],
-    "portsAttributes": {
-        "3000": {
-            "label": "Application",
-            "onAutoForward": "notify"
-        }
-    },
-
-    "postCreateCommand": "npm install && echo '✓ Dev container ready!'",
-
-    "postStartCommand": "tmux new-session -d -s ai-dev || true",
-
-    "features": {
-        "ghcr.io/devcontainers/features/common-utils:2": {
-            "installZsh": true,
-            "installOhMyZsh": true,
-            "username": "bitnami",
-            "userUid": "1000",
-            "userGid": "1000"
-        },
-        "ghcr.io/devcontainers/features/node:1": {
-            "version": "20",
-            "nodeGypDependencies": true
-        }
-    }
+    "forwardPorts": [],
+    "postCreateCommand": "npm install && echo 'Dev container ready!'"
 }
