@@ -14,9 +14,8 @@ updates:
           prefix: "chore(deps):"
       groups:
           npm-dependencies:
-              patterns:
+              patterns: "*"
               update-types:
-                  - "security"
                   - "patch"
                   - "minor"
                   - "major"
