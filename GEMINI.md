@@ -133,17 +133,6 @@
 - Testing: Staging environment on same stack
 - Deployment: Manual (considering automation)
 
-### Gemini CLI Enhancements
-
-To improve my performance, precision, and context-awareness, my core script (`gemini-cli.js`) has been significantly enhanced. These improvements directly address the feedback on tuning my behavior:
-
-*   **System Prompt Integration:** I now load the `GEMINI.md` file at the start of every session. This file serves as my system prompt, providing me with consistent context about your environment and my persona.
-*   **Context Retention:** The script now maintains a conversation history. This allows me to remember previous questions and answers within a single session, ensuring a more coherent and intelligent conversation.
-*   **Configurable Parameters:** You can now control my behavior using command-line arguments for the model (`--model`), temperature (`--temperature`), and max output tokens (`--max-tokens`). This allows for fine-tuning of my execution speed and the determinism of my responses.
-*   **Optimized Model Selection:** My model selection logic is now more efficient, testing only the specified model by default and falling back to others only if necessary.
-
-These enhancements mean that I can now have stateful conversations, remembering the context of our interaction and providing more relevant and accurate responses.
-
 ## 🛠️ Technical Specifications
 
 ### Bitnami Customizations
