@@ -1,253 +1,116 @@
 #!/usr/bin/env node
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-
 const readline = require('readline');
-
-const fs = require('fs').promises;
-
-const path = require('path');
-
-const { program } = require('commander');
-
-
 
 require('dotenv').config();
 
-
-
-program
-
-  .option('-t, --temperature <number>', 'Set the temperature for generation', parseFloat, 0.7)
-
-  .option('-m, --max-tokens <number>', 'Set the max output tokens', parseInt, 2048)
-
-  .option('--model <string>', 'Set the model to use', 'gemini-1.5-flash')
-
-  .parse(process.argv);
-
-
-
-const options = program.opts();
-
-
-
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 const rl = readline.createInterface({
-
   input: process.stdin,
-
   output: process.stdout
-
 });
 
-
-
+// Gemini 2.0 model names
 const MODEL_OPTIONS = [
-
-  'gemini-2.0-flash',
-
-  'gemini-2.0-flash-lite',
-
-  'gemini-1.5-flash',
-
-  'gemini-1.5-pro',
-
-  'gemini-1.0-pro'
-
+  'gemini-2.0-flash',        // Primary Flash model
+  'gemini-2.0-flash-lite',   // Lite version
+  'gemini-1.5-flash',        // Fallback to 1.5
+  'gemini-1.5-pro',          // Fallback to 1.5 pro
+  'gemini-1.0-pro'           // Legacy fallback
 ];
 
-
-
-let workingModel = options.model;
-
-let chat;
-
-let conversationHistory = [];
-
-
-
-async function loadSystemPrompt() {
-
-    try {
-
-        const geminiMdPath = path.join(__dirname, 'GEMINI.md');
-
-        const systemPrompt = await fs.readFile(geminiMdPath, 'utf-8');
-
-        // Prepend the system prompt to the conversation history as the initial context
-
-        conversationHistory.push({ role: "user", parts: [{ text: systemPrompt }] });
-
-        conversationHistory.push({ role: "model", parts: [{ text: "I have reviewed my context and am ready to assist you." }] });
-
-        console.log('✅ System prompt loaded from GEMINI.md');
-
-        return true;
-
-    } catch (error) {
-
-        console.log('⚠️ Could not load GEMINI.md. Continuing without a system prompt.');
-
-        return false;
-
-    }
-
-}
-
-
+let workingModel = 'gemini-2.0-flash'; // Default to Gemini 2.0 Flash
 
 async function testModel(modelName) {
-
   try {
-
-    process.stdout.write(`   Testing ${modelName}...`);
-
+    console.log(`   Testing ${modelName}...`);
     const model = genAI.getGenerativeModel({ 
-
       model: modelName,
-
-      generationConfig: { maxOutputTokens: 1024 }
-
+      generationConfig: {
+        maxOutputTokens: 1024,
+      }
     });
-
     const result = await model.generateContent("Say hello in one word");
-
-    await result.response;
-
-    process.stdout.write(` ✅ Success!\n`);
-
+    const response = await result.response;
+    console.log(`   ✅ ${modelName}: Success!`);
     return true;
-
   } catch (error) {
-
-    process.stdout.write(` ❌ Failed\n`);
-
+    console.log(`   ❌ ${modelName}: ${error.message.split('\n')[0]}`);
     return false;
-
   }
-
 }
-
-
 
 async function findWorkingModel() {
-
-    if (await testModel(workingModel)) {
-
-        console.log(`\n🎯 Selected model: ${workingModel}`);
-
-        return workingModel;
-
-    }
-
-
-
-  console.log(`\n🔍 Model ${workingModel} failed. Testing other available Gemini models...\n`);
-
+  console.log('🔍 Testing available Gemini models...\n');
+  
   for (const modelName of MODEL_OPTIONS) {
-
-    if (modelName === workingModel) continue; // Skip the one that already failed
-
-    if (await testModel(modelName)) {
-
+    const isWorking = await testModel(modelName);
+    if (isWorking) {
       console.log(`\n🎯 Selected model: ${modelName}`);
-
       return modelName;
-
     }
-
   }
-
-  throw new Error('\n❌ No working Gemini model found.');
-
+  
+  throw new Error('\n❌ No working Gemini model found. Possible issues:\n   • Invalid API key\n   • API key not enabled for Gemini\n   • Regional restrictions\n   • Check: https://aistudio.google.com/app/apikey');
 }
 
-
-
-async function startChat() {
-
-    console.log(`\n🔧 Configuration:`);
-
-    console.log(`   - Model: ${workingModel}`);
-
-    console.log(`   - Temperature: ${options.temperature}`);
-
-    console.log(`   - Max Tokens: ${options.maxTokens}\n`);
-
-
-
+async function generateResponse(prompt) {
+  try {
     const model = genAI.getGenerativeModel({ 
-
-        model: workingModel,
-
-        generationConfig: {
-
-            maxOutputTokens: options.maxTokens,
-
-            temperature: options.temperature,
-
-        }
-
+      model: workingModel,
+      generationConfig: {
+        maxOutputTokens: 2048,
+        temperature: 0.7,
+      }
     });
-
-    chat = model.startChat({
-
-        history: conversationHistory,
-
-        generationConfig: {
-
-            maxOutputTokens: options.maxTokens,
-
-            temperature: options.temperature,
-
-        }
-
-    });
-
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    throw new Error(`API Error: ${error.message}`);
+  }
 }
-
-
 
 async function interactiveChat() {
   try {
     workingModel = await findWorkingModel();
-    await loadSystemPrompt();
-    await startChat();
-    
-    console.log(`\n🤖 Gemini CLI (Enhanced) - Ready! (Using ${workingModel})`);
+    console.log(`\n🤖 Gemini CLI - Ready! (Using ${workingModel})`);
     console.log('💡 Type your questions below (type "exit" to quit)\n');
     
     while (true) {
-        const userInput = await new Promise((resolve) => {
-            rl.question('👤 You: ', resolve);
-        });
+      const question = await new Promise((resolve) => {
+        rl.question('👤 You: ', resolve);
+      });
 
-        const trimmedInput = userInput.trim();
-        
-        if (trimmedInput.toLowerCase() === 'exit') {
-            console.log('🤖 Gemini: Goodbye! 👋');
-            rl.close();
-            process.exit(0);
-        }
-
-        if (!trimmedInput) continue;
-
-        process.stdout.write('🤖 Gemini: Thinking...');
+      const trimmedQuestion = question.trim();
       
-        try {
-            const result = await chat.sendMessage(trimmedInput);
-            const response = await result.response;
-            const text = response.text();
-            console.log('\r🤖 Gemini: ' + text + '\n');
-            // Update history
-            conversationHistory.push({ role: "user", parts: [{ text: trimmedInput }]});
-            conversationHistory.push({ role: "model", parts: [{ text: text }]});
+      if (trimmedQuestion.toLowerCase() === 'exit') {
+        console.log('🤖 Gemini: Goodbye! 👋');
+        rl.close();
+        process.exit(0);
+      }
 
-        } catch (error) {
-            console.log('\r🤖 Gemini: Error - ' + error.message + '\n');
+      if (!trimmedQuestion) continue;
+
+      process.stdout.write('🤖 Gemini: Thinking...');
+      
+      try {
+        const response = await generateResponse(trimmedQuestion);
+        console.log('\r🤖 Gemini: ' + response + '\n');
+      } catch (error) {
+        console.log('\r🤖 Gemini: Error - ' + error.message + '\n');
+        
+        // Try to recover by finding a new working model
+        console.log('🔄 Attempting to find another working model...');
+        try {
+          workingModel = await findWorkingModel();
+        } catch (e) {
+          console.log('❌ Cannot recover. Please check your API key.');
+          rl.close();
+          process.exit(1);
         }
+      }
     }
   } catch (error) {
     console.log(error.message);
@@ -256,5 +119,20 @@ async function interactiveChat() {
   }
 }
 
-// For now, we'll focus on the interactive mode to test the new features.
-interactiveChat();
+// Single question mode
+if (process.argv.length > 2) {
+  const prompt = process.argv.slice(2).join(' ');
+  (async () => {
+    try {
+      workingModel = await findWorkingModel();
+      console.log('👤 You:', prompt);
+      const response = await generateResponse(prompt);
+      console.log('🤖 Gemini:', response);
+    } catch (error) {
+      console.log('❌ Error:', error.message);
+    }
+    process.exit(0);
+  })();
+} else {
+  interactiveChat();
+}
