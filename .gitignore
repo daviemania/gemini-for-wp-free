@@ -59,7 +59,7 @@ pip-log.txt
 .DS_Store
 Thumbs.db
 
-gemini-for-wp/
+# gemini-for-wp/  # uncommented for release
 .gemini/
 gha-creds-*.json
 gemini-docs
