@@ -35,13 +35,13 @@
         "chatwmcp": "node chat-with-mcp.js",
         "ollamachat": "node check-license.js ollamachat && node chat-ollama.js",
         "openrouterchat": "node check-license.js openrouterchat && node chat-openrouter.mjs",
-        "githubchat": "node chat-github.js",
+        "githubchat": "node check-license.js githubchat && node chat-github.js",
         "organize": "node smart-folder-manager/cli.js organize",
         "organize:smart": "node check-license.js organize:smart && node smart-folder-manager/cli.js smart",
-        "organize:dupes": "node smart-folder-manager/cli.js duplicates",
+        "organize:dupes": "node check-license.js organize:dupes && node smart-folder-manager/cli.js duplicates",
         "organize:clean": "node smart-folder-manager/cli.js clean",
         "organize:analyze": "node smart-folder-manager/cli.js analyze --detailed",
-        "organize:interactive": "node smart-folder-manager/cli.js",
-        "claude:code": "npx claude code"
+        "organize:interactive": "node check-license.js organize:interactive && node smart-folder-manager/cli.js",
+        "claude:code": "node check-license.js claude:code && npx claude code"
     }
 }

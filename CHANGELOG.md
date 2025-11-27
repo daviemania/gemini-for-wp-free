@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fatal error on plugin activation: Corrected `global $fs` → `global $gfw_fs` and `$fs->is_premium()` → `$gfw_fs->is_premium()` in `freemius-gate.php`
 - Test ZIP `gemini-mcp-tools-v1.0.4-test.zip` includes `vendor/freemius/` SDK for standalone testing on sites without Freemius auto-injection
 
+## [1.0.5] - 2025-11-27
+### Added
+- CLI gating expansion: githubchat, claude:code, organize:interactive, organize:dupes now premium-gated via check-license.js (8 total premiums)
+
+### Fixed
+- GH workflow freemius-deploy.yml: Secret scan `uses: ./` → `gitleaks/gitleaks-action@v2` (ZIP builds on tags)
+
+### Changed
+- freemius-gate.php: Added 'composed_exploring_dolphin' to PREMIUM_TOOLS (MCP ready)
+
 ## [Unreleased]
 
 ### Added
