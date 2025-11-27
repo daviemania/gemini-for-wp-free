@@ -55,11 +55,28 @@ RUN addgroup -g $USER_GID bitnami \
 # Install Oh My Zsh for bitnami user
 RUN su - bitnami -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended'
 
+# Install NVM (Node Version Manager) for bitnami user
+RUN su - bitnami -c 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash'
+
+# Configure NVM in .zshrc
+RUN echo 'export NVM_DIR="$HOME/.nvm"' >> /home/bitnami/.zshrc \
+    && echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm' >> /home/bitnami/.zshrc \
+    && echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion' >> /home/bitnami/.zshrc
+
+# Update PATH for bitnami user
+RUN echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> /home/bitnami/.zshrc
+
+# Add CCR alias to .zshrc
+RUN echo 'alias ccr="node $HOME/.npm-global/lib/node_modules/@musistudio/claude-code-router/dist/cli.js"' >> /home/bitnami/.zshrc
+
+# Initialize Git LFS for bitnami user
+RUN su - bitnami -c 'git lfs install'
+
 # Install CLI tools as bitnami user
 RUN su - bitnami -c ' \
     # Configure npm for user installation
     npm config set prefix "/home/bitnami/.npm-global" && \
-    # Install Gemini CLI (correct package name)
+    # Install Gemini CLI
     npm install -g @google/gemini-cli && \
     # Install Claude Code Router
     npm install -g @musistudio/claude-code-router && \
@@ -77,12 +94,6 @@ RUN su - bitnami -c ' \
     # Install Claude Code
     npm install -g @anthropic-ai/claude-code && \
 '
-
-# Update PATH for bitnami user
-RUN echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> /home/bitnami/.zshrc
-
-# Add CCR alias to .zshrc (after Oh My Zsh installation)
-RUN echo 'alias ccr="$HOME/.npm-global/lib/node_modules/@musistudio/claude-code-router/dist/cli.js"' >> /home/bitnami/.zshrc
 
 # Create necessary directories
 RUN mkdir -p /home/bitnami/.config/fish \

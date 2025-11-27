@@ -28,7 +28,7 @@ npm run organize:smart   # AI file organization
 
 **WordPress Integration:**
 - Path: `/opt/bitnami/wordpress/` (symlink: `/wordpress`)
-- Auth: Bearer `uX484&B$k@c@6072&VdTJi#3`
+- Auth: Bearer `${process.env.WP_MCP_TOKEN}`
 - 37 MCP functions: See `wordpress_mcp_functions.md`
 - JSON-RPC 2.0 required
 

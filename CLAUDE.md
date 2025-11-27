@@ -36,7 +36,7 @@ User Query → AI (Gemini/Ollama) → MCP Tool Call → mcp.js Relay → WP REST
 
 **Key Integration Points:**
 - 37 WordPress MCP functions documented in `wordpress_mcp_functions.md`
-- Authentication: Bearer `uX484&B$k@c@6072&VdTJi#3`
+- Authentication: Bearer `${process.env.WP_MCP_TOKEN}`
 - JSON-RPC 2.0 format required for all MCP calls
 - WordPress lives at `/opt/bitnami/wordpress/` (symlink: `/wordpress`)
 
