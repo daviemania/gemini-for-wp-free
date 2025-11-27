@@ -2,7 +2,7 @@ const http = require("http");
 const { default: fetch } = require("node-fetch");
 
 const WORDPRESS_MCP_ENDPOINT = "https://maniainc.com/wp-json/mcp/v1/sse";
-const BEARER_TOKEN = "uX484&B$k@c@6072&VdTJi#3";
+const BEARER_TOKEN = process.env.WP_MCP_TOKEN;
 const RELAY_PORT = 3001;
 
 const server = http.createServer(async (req, res) => {

@@ -64,7 +64,7 @@ function fetch(url, options = {}) {
 // MCP Configuration
 const MCP_ENDPOINT = "http://localhost:3001/mcp";
 const MCP_WP_ENDPOINT = "https://maniainc.com/wp-json/mcp/v1/sse";
-const MCP_AUTH_TOKEN = "uX484&B$k@c@6072&VdTJi#3";
+const MCP_AUTH_TOKEN = process.env.WP_MCP_TOKEN;
 
 // Load configuration from YAML
 let config = {};
