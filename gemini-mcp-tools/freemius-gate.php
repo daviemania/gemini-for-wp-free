@@ -5,18 +5,9 @@
  * Premium: Ollama/OpenRouter/Exa/smart-org ($29/yr)
  */
 
-// Freemius SDK Loader (download from freemius.com/wordpress-sdk)
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-if ( ! class_exists( 'Freemius' ) ) {
-    require_once dirname( __FILE__ ) . '/freemius/wordpress-sdk/start.php';  // SDK folder
-    $fs = fs_dynamic_init();
-} else {
-    $fs = Freemius::get_instance_for_plugin();
-}
-
-$fs->set_basename( false, __FILE__ );
-$fs->add_filter( 'connect_message_on_update', '__return_false' );
+$gfw_fs = gfw_fs(); // Use main plugin's Freemius instance
 
 define( 'FREEMIUM_PLAN_ID', 36767 );  // Freemius Premium Plan ID (overall premium: monthly $29/yr $275.88/lt $829.99)
 
