@@ -68,6 +68,7 @@ data/
 Thumbs.db
 
 # gemini-mcp-tools/  # uncommented for release
+gemini-mcp-tools/freemius/
 .gemini/
 gha-creds-*.json
 gemini-docs
