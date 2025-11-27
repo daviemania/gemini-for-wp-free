@@ -56,6 +56,10 @@ pip-log.txt
 *.swo
 
 # OS
+.claude/
+wordpress
+CLAUDE.md
+GEMINI.md
 .DS_Store
 Thumbs.db
 

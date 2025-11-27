@@ -1,5 +1,16 @@
 # Gemini for WordPress
 
+@daviemania – WP blogger, musician, YouTuber, upcoming musician. Created this tool for my own multisite WordPress workflow at Mania Africa, but saw its utility for all WP users.
+
+- Site: [maniainc.com](https://maniainc.com)
+- [linktr.ee/davidmania](https://linktr.ee/davidmania)
+- Mania Africa: [About](https://maniainc.com/about-us) | [Contact](https://maniainc.com/contact-us)
+
+Official repo email: mail@davidmania.com (PGP hardened: /.well-known/security.txt).
+
+[Privacy Policy](./privacy-policy.md) | [Terms](./terms-and-conditions.md)
+
+
 A CLI-based environment for interacting with and managing a WordPress site using AI-powered tools and a custom Media Control Protocol (MCP).
 
 ## Overview
