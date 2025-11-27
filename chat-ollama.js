@@ -11,7 +11,7 @@ const OllamaManager = require("./ollama-manager");
 
 // MCP Configuration
 const MCP_RELAY_URL = "http://localhost:3001";
-const MCP_BEARER_TOKEN = "Bearer uX484&B$k@c@6072&VdTJi#3";
+const MCP_BEARER_TOKEN = `Bearer ${process.env.WP_MCP_TOKEN}`;
 
 // Simple MCP Client
 class SimpleMCPClient {
