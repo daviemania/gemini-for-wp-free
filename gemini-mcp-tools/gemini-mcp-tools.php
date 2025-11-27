@@ -2,8 +2,9 @@
 /**
  * Plugin Name: Gemini MCP Tools
  * Description: Integrates custom tools with AI Engine's Media Control Protocol.
- * Version: 1.0.0
- * Author: Gemini
+ * Version: 1.0.7
+ * Author: David Mania
+ * Author URI: https://maniainc.com
  */
 
 if ( ! function_exists( 'gfw_fs' ) ) {
