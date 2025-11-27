@@ -60,6 +60,10 @@ pip-log.txt
 wordpress
 CLAUDE.md
 GEMINI.md
+tasks/
+projects/
+tmp/
+data/
 .DS_Store
 Thumbs.db
 
