@@ -12,7 +12,7 @@ $gfw_fs = gfw_fs(); // Use main plugin's Freemius instance
 define( 'FREEMIUM_PLAN_ID', 36767 );  // Freemius Premium Plan ID (overall premium: monthly $29/yr $275.88/lt $829.99)
 
 $FREE_TOOLS = [ 'wp_list_posts', 'wp_create_post', 'wp_update_post', 'wp_delete_post', /* +33 MCP CRUD */ ];
-$PREMIUM_TOOLS = [ 'ollama_chat', 'exa_search', 'openrouter_call', 'smart_folder_organize' ];
+$PREMIUM_TOOLS = [ 'ollama_chat', 'exa_search', 'openrouter_call', 'smart_folder_organize', 'composed_exploring_dolphin' ];
 
 function freemius_gate_mcp_call( $method ) {
     global $gfw_fs;
