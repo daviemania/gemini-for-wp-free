@@ -2,7 +2,7 @@
 /**
  * Freemius Freemium Gate for Gemini MCP Tools
  * Free: 37 MCP CRUD tools
- * Premium: Ollama/OpenRouter/Exa/smart-org ($29/yr)
+ * Premium: Ollama/OpenRouter/Exa/smart-org/dolphin ($29/yr)
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
