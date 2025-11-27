@@ -38,7 +38,8 @@
       "Bash(docker compose exec:*)",
       "Bash(docker compose restart:*)",
       "Bash(docker compose down:*)",
-      "Bash(docker compose up:*)"
+      "Bash(docker compose up:*)",
+      "Bash(git push public-free main)"
     ]
   },
   "outputStyle": "Explanatory"
