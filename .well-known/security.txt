@@ -1,4 +1,4 @@
-Contact: mailto:mail@davidmania.com
+Contact: mailto:mail@davidmania.com?subject=Vuln%20Report%20-%20gemini-for-wp
 Contact: https://github.com/daviemania
 Expires: 2026-11-27T00:00:00Z
 Encryption: https://daviemania.github.io/public-key.asc
