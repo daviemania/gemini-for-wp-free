@@ -26,6 +26,23 @@ The environment is designed for developers and administrators to perform complex
 - **Caching:** Redis, Varnish, Nginx fastcgi_cache
 - **Development:** VS Code Dev Containers, Docker
 
+## Environment Setup
+
+Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+cp .env.example .env
+# Edit .env with your keys (git-ignored)
+```
+
+**Required Vars:**
+- `WP_MCP_TOKEN`: WordPress MCP Bearer token
+- `GEMINI_API_KEY`: Google Gemini API
+- `GITHUB_TOKEN`: GitHub PAT (for MCP)
+- `EXA_API_KEY`: Exa AI search (optional)
+
+**Security Note:** `.env` is git-ignored. Never commit secrets!
+
 ## Getting Started
 
 ### Prerequisites
