@@ -2,7 +2,7 @@
   - [x] Use `curl` to send a basic request to the `/wp-json/mcp/v1/sse` endpoint. [test]
 - [x] **Verify Core Function Execution** [test]
   - [x] Select the `wp_list_plugins` function. [test]
-  - [x] Construct a `curl` command including the `Authorization: Bearer uX484&B$k@c@6072&VdTJi#3` header and the appropriate JSON payload for the function. [test]
+  - [x] Construct a `curl` command including the `Authorization: Bearer ${WP_MCP_TOKEN}` header and the appropriate JSON payload for the function. [test]
   - [x] Execute the command. [test]
 - [x] **Log Test Results** [documentation]
   - [x] Create a new file named `TEST.md`. [documentation]

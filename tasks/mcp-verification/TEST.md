@@ -16,7 +16,7 @@ curl -i -s -o /dev/null -w '%{http_code}' http://localhost/wp-json/mcp/v1/sse
 
 **Command Executed (Attempt 1 - http://localhost):**
 ```bash
-curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer uX484&B$k@c@6072&VdTJi#3" -d '{"function": "wp_list_plugins"}' http://localhost/wp-json/mcp/v1/sse
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${WP_MCP_TOKEN}" -d '{"function": "wp_list_plugins"}' http://localhost/wp-json/mcp/v1/sse
 ```
 **Output:**
 ```html
@@ -32,7 +32,7 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer uX484
 
 **Command Executed (Attempt 2 - https://localhost):**
 ```bash
-curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer uX484&B$k@c@6072&VdTJi#3" -d '{"function": "wp_list_plugins"}' https://localhost/wp-json/mcp/v1/sse --insecure
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${WP_MCP_TOKEN}" -d '{"function": "wp_list_plugins"}' https://localhost/wp-json/mcp/v1/sse --insecure
 ```
 **Output:**
 ```html
@@ -48,7 +48,7 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer uX484
 
 **Command Executed (Attempt 3 - https://127.0.0.1):**
 ```bash
-curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer uX484&B$k@c@6072&VdTJi#3" -d '{"function": "wp_list_plugins"}' https://127.0.0.1/wp-json/mcp/v1/sse --insecure
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${WP_MCP_TOKEN}" -d '{"function": "wp_list_plugins"}' https://127.0.0.1/wp-json/mcp/v1/sse --insecure
 ```
 **Output:**
 ```html
@@ -64,7 +64,7 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer uX484
 
 **Command Executed (Attempt 4 - https://127.0.0.1 with Host: mania.africa):**
 ```bash
-curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer uX484&B$k@c@6072&VdTJi#3" -H "Host: mania.africa" -d '{"function": "wp_list_plugins"}' https://127.0.0.1/wp-json/mcp/v1/sse --insecure
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${WP_MCP_TOKEN}" -H "Host: mania.africa" -d '{"function": "wp_list_plugins"}' https://127.0.0.1/wp-json/mcp/v1/sse --insecure
 ```
 **Output:**
 ```json
