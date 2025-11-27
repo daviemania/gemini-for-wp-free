@@ -18,7 +18,6 @@ if ( ! class_exists( 'Freemius' ) ) {
 $fs->set_basename( false, __FILE__ );
 $fs->add_filter( 'connect_message_on_update', '__return_false' );
 
-<<<<<<< HEAD
 define( 'FREEMIUM_PLAN_ID', 36767 );  // Freemius Premium Plan ID (overall premium: monthly $29/yr $275.88/lt $829.99)
 
 $FREE_TOOLS = [ 'wp_list_posts', 'wp_create_post', 'wp_update_post', 'wp_delete_post', /* +33 MCP CRUD */ ];
