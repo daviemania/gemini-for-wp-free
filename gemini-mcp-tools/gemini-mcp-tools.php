@@ -6,15 +6,17 @@
  * Author: Gemini
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
+if (!defined("ABSPATH")) {
+    exit(); // Exit if accessed directly
 }
 
-require_once plugin_dir_path( __FILE__ ) . 'mcp.php';
+require_once plugin_dir_path(__FILE__) . "mcp.php";
+require_once __DIR__ . "/freemius-gate.php";
 
 // Initialize the MCP tools
-function gemini_mcp_tools_init() {
+function gemini_mcp_tools_init()
+{
     global $gemini_mcp_tools_mcp;
     $gemini_mcp_tools_mcp = new Gemini_MCP_Tools_MCP();
 }
-add_action( 'plugins_loaded', 'gemini_mcp_tools_init' );
+add_action("plugins_loaded", "gemini_mcp_tools_init");
