@@ -82,7 +82,7 @@ core
 core.*
 core
 core.*
-gemini-mcp-tools/vendor/
+
 
 # Unnecessary Personal Files
 tasks/  # All (geekline/mcp-verification)
