@@ -5,7 +5,7 @@ This document outlines the 37 Media Control Protocol (MCP) functions available f
 ## REST API Endpoint
 
 The WordPress MCP REST API endpoint is: `/wp-json/mcp/v1/sse`
-Access is granted using the Bearer Token: `uX484&B$k@c@6072&VdTJi#3`
+Access is granted using the Bearer Token: `${WP_MCP_TOKEN}`
 
 ## Request Format
 
@@ -39,7 +39,7 @@ Here is an example of how to correctly call the `wp_list_plugins` function using
 ```bash
 curl -i -X POST 'https://maniainc.com/wp-json/mcp/v1/sse' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer uX484&B$k@c@6072&VdTJi#3' \
+  -H 'Authorization: Bearer ${WP_MCP_TOKEN}' \
   --data-raw '{
     "jsonrpc": "2.0",
     "id": 1,
