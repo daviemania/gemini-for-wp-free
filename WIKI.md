@@ -29,7 +29,7 @@ npm run organize:smart   # AI file organization
 **WordPress Integration:**
 - Path: `/opt/bitnami/wordpress/` (symlink: `/wordpress`)
 - Auth: Bearer `${process.env.WP_MCP_TOKEN}`
-- 37 MCP functions: See `wordpress_mcp_functions.md`
+- 37 MCP functions: See `wordpress_mcp_functions.md` (powered by [AI Engine WordPress Plugin](https://wordpress.org/plugins/ai-engine/)) + full [Gemini MCP Tools plugin](/gemini-mcp-tools/) included (requires AI Engine)
 - JSON-RPC 2.0 required
 
 ## Key Directories
@@ -41,6 +41,7 @@ npm run organize:smart   # AI file organization
 | `/agents/` | AI configs |
 
 ## Related Files
+- [acknowledgements.md](acknowledgements.md)
 - [CHANGELOG.md](CHANGELOG.md)
 - [CLAUDE.md](CLAUDE.md) - Claude Code instructions
 - GitLab: https://gitlab.com/daviemania/gemini-project

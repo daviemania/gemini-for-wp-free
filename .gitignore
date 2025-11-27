@@ -56,10 +56,18 @@ pip-log.txt
 *.swo
 
 # OS
+.claude/
+wordpress
+CLAUDE.md
+GEMINI.md
+tasks/
+projects/
+tmp/
+data/
 .DS_Store
 Thumbs.db
 
-gemini-for-wp/
+# gemini-mcp-tools/  # uncommented for release
 .gemini/
 gha-creds-*.json
 gemini-docs
