@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fatal error on activation (include SDK in test ZIP for standalone test; prod excludes for Freemius inject)
 
+## [1.0.4] - 2025-11-27
+### Fixed
+- Fatal error on plugin activation: Corrected `global $fs` → `global $gfw_fs` and `$fs->is_premium()` → `$gfw_fs->is_premium()` in `freemius-gate.php`
+- Test ZIP `gemini-mcp-tools-v1.0.4-test.zip` includes `vendor/freemius/` SDK for standalone testing on sites without Freemius auto-injection
+
 ## [Unreleased]
 
 ### Added

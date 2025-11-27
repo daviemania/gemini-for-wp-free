@@ -15,9 +15,9 @@ $FREE_TOOLS = [ 'wp_list_posts', 'wp_create_post', 'wp_update_post', 'wp_delete_
 $PREMIUM_TOOLS = [ 'ollama_chat', 'exa_search', 'openrouter_call', 'smart_folder_organize' ];
 
 function freemius_gate_mcp_call( $method ) {
-    global $fs;
-    if ( in_array( $method, $PREMIUM_TOOLS ) && ! $fs->is_premium() ) {
-        return new WP_Error( 'freemium_required', 'Premium license required for ' . $method . '. Upgrade: ' . $fs->get_upgrade_url() );
+    global $gfw_fs;
+    if ( in_array( $method, $PREMIUM_TOOLS ) && ! $gfw_fs->is_premium() ) {
+        return new WP_Error( 'freemium_required', 'Premium license required for ' . $method . '. Upgrade: ' . $gfw_fs->get_upgrade_url() );
     }
     return true;
 }
