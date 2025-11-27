@@ -83,3 +83,27 @@ core.*
 core
 core.*
 gemini-mcp-tools/vendor/
+
+# Unnecessary Personal Files
+tasks/  # All (geekline/mcp-verification)
+ projects/  # All (tool-creator-enhancer/ai-*)
+ tmp/  # All (betterlinks/post_*)
+ data/
+ .genkit/
+ .github/chat_log
+ chat_history_1/
+ wordpress_health_review/
+ betterlinks_db_fix*
+ adk_agent_list/
+ .gemini_security/
+ projects/tool-creator-enhancer/
+ .github
+ .nvmrc
+ adk_agent_list.json
+ chat_log.txt
+ gemini-project persona
+ wordpress_health_review.md
+ stack_maintenance
+ .genkit/traces_idx/
+ .gemini_security/
+ .claude/agents/settings.local.json
