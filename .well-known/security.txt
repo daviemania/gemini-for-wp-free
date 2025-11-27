@@ -1,4 +1,4 @@
-Contact: mailto:daviemania@gmail.com
+Contact: mailto:mail@davidmania.com
 Contact: https://github.com/daviemania
 Expires: 2026-11-27T00:00:00Z
 Encryption: https://daviemania.github.io/public-key.asc
