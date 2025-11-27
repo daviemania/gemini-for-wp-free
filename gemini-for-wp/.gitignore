@@ -1,0 +1,24 @@
+# Node.js
+node_modules/
+.env
+.dockerignore
+Dockerfile.fixed
+docker-compose.yml
+google-gemini-cli-0.11.3.tgz
+google-gemini-cli-core-0.11.3.tgz
+
+# VSCode
+.vscode/
+
+# devcontainer
+.devcontainer/
+
+# Github
+.github/
+
+# core
+/core/
+business_key.pem
+
+.gemini/
+gha-creds-*.json
