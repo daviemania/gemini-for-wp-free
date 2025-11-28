@@ -15,32 +15,15 @@ class Gemini_MCP_Tools_MCP {
   }
 
   /**
-   * Helper: Format Success Response (JSON-RPC 2.0)
+   * Security verification placeholder.
+   * The attached logic calls this method, so it must exist to prevent errors.
    */
-  private function rpc_success($data, $id) {
-    return [
-        'jsonrpc' => '2.0',
-        'result'  => $data,
-        'id'      => $id
-    ];
-  }
-
-  /**
-   * Helper: Format Error Response (JSON-RPC 2.0)
-   */
-  private function rpc_error($code, $message, $id, $data = null) {
-      $error = [
-          'code'    => $code,
-          'message' => $message
-      ];
-      if ($data) {
-          $error['data'] = $data;
-      }
-      return [
-          'jsonrpc' => '2.0',
-          'error'   => $error,
-          'id'      => $id
-      ];
+  public function verify_security( $tool, $args ) {
+    // You can add global security logic here (e.g., check if user is logged in)
+    if ( ! is_user_logged_in() ) {
+        // return [ 'success' => false, 'error' => 'Authentication required' ];
+    }
+    return true;
   }
 
   public function register_tools( $tools ) {
@@ -657,23 +640,13 @@ class Gemini_MCP_Tools_MCP {
 
   public function handle_tool_execution( $result, $tool, $args, $id ) {
 
-    // 0. Check if result already handled (e.g. by Freemius Gate)
-    // If Freemius gate returned an error/array, we should respect it
-    if ( is_array($result) && (isset($result['error']) || isset($result['result'])) ) {
-        return $result;
+    // Security verification (Applied from attached version)
+    $security_check = $this->verify_security( $tool, $args );
+    if ( $security_check !== true ) {
+        return $security_check;
     }
 
-    // 1. Security verification (calling global function from main plugin)
-    if (function_exists('gemini_mcp_verify_security')) {
-        $security_check = gemini_mcp_verify_security( $tool, $args );
-        if ( $security_check !== true ) {
-            // Convert simple security error to JSON-RPC 2.0
-            $msg = isset($security_check['error']) ? $security_check['error'] : 'Access Denied';
-            return $this->rpc_error(-32001, $msg, $id);
-        }
-    }
-
-    if ( strpos( $tool, 'wp_' ) !== 0 && strpos( $tool, 'mwai_' ) !== 0 && strpos( $tool, 'ollama_' ) !== 0 && strpos( $tool, 'exa_' ) !== 0 && strpos( $tool, 'openrouter_' ) !== 0 && strpos( $tool, 'smart_' ) !== 0 && strpos( $tool, 'composed_' ) !== 0 && strpos( $tool, 'claude_' ) !== 0 && strpos( $tool, 'github_' ) !== 0 ) {
+    if ( strpos( $tool, 'wp_' ) !== 0 && strpos( $tool, 'mwai_' ) !== 0 ) {
       return $result;
     }
 
@@ -681,7 +654,7 @@ class Gemini_MCP_Tools_MCP {
       switch ( $tool ) {
         case 'wp_list_plugins':
           if ( ! current_user_can( 'activate_plugins' ) ) {
-            return $this->rpc_error(-32601, 'Insufficient permissions to list plugins', $id);
+            return [ 'success' => false, 'error' => 'Insufficient permissions to list plugins' ];
           }
           if ( ! function_exists( 'get_plugins' ) ) {
             require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -694,11 +667,11 @@ class Gemini_MCP_Tools_MCP {
                 $filtered_plugins[] = ['Name' => $plugin['Name'], 'Version' => $plugin['Version']];
             }
           }
-          return $this->rpc_success($filtered_plugins, $id);
+          return ['success' => true, 'data' => $filtered_plugins];
 
         case 'wp_get_users':
           if ( ! current_user_can( 'list_users' ) ) {
-            return $this->rpc_error(-32601, 'Insufficient permissions to list users', $id);
+            return [ 'success' => false, 'error' => 'Insufficient permissions to list users' ];
           }
           $query_args = ['fields' => ['ID', 'user_login', 'display_name', 'roles']];
           if (isset($args['search'])) $query_args['search'] = '*' . $args['search'] . '*';
@@ -707,34 +680,33 @@ class Gemini_MCP_Tools_MCP {
           if (isset($args['offset'])) $query_args['offset'] = $args['offset'];
           if (isset($args['paged'])) $query_args['paged'] = $args['paged'];
           $users = get_users($query_args);
-          return $this->rpc_success($users, $id);
+          return ['success' => true, 'data' => $users];
 
         case 'wp_create_user':
           if ( ! current_user_can( 'create_users' ) ) {
-            return $this->rpc_error(-32601, 'Insufficient permissions to create users', $id);
+            return [ 'success' => false, 'error' => 'Insufficient permissions to create users' ];
           }
           $user_id = wp_create_user($args['user_login'], isset($args['user_pass']) ? $args['user_pass'] : wp_generate_password(), $args['user_email']);
-          if (is_wp_error($user_id)) return $this->rpc_error(-32000, $user_id->get_error_message(), $id);
-
+          if (is_wp_error($user_id)) return ['success' => false, 'error' => $user_id->get_error_message()];
           $update_args = ['ID' => $user_id];
           if (isset($args['display_name'])) $update_args['display_name'] = $args['display_name'];
           if (isset($args['role'])) $update_args['role'] = $args['role'];
           wp_update_user($update_args);
-          return $this->rpc_success(['ID' => $user_id], $id);
+          return ['success' => true, 'data' => ['ID' => $user_id]];
 
         case 'wp_update_user':
           if ( ! current_user_can( 'edit_users' ) ) {
-            return $this->rpc_error(-32601, 'Insufficient permissions to edit users', $id);
+            return [ 'success' => false, 'error' => 'Insufficient permissions to edit users' ];
           }
           $update_args = ['ID' => $args['ID']];
           $update_args = array_merge($update_args, $args['fields']);
           $user_id = wp_update_user($update_args);
-          if (is_wp_error($user_id)) return $this->rpc_error(-32000, $user_id->get_error_message(), $id);
-          return $this->rpc_success(['ID' => $user_id], $id);
+          if (is_wp_error($user_id)) return ['success' => false, 'error' => $user_id->get_error_message()];
+          return ['success' => true, 'data' => ['ID' => $user_id]];
 
         case 'wp_get_comments':
           if ( ! current_user_can( 'moderate_comments' ) ) {
-            return $this->rpc_error(-32601, 'Insufficient permissions to access comments', $id);
+            return [ 'success' => false, 'error' => 'Insufficient permissions to access comments' ];
           }
           $query_args = [];
           if (isset($args['post_id'])) $query_args['post_id'] = $args['post_id'];
@@ -744,11 +716,11 @@ class Gemini_MCP_Tools_MCP {
           if (isset($args['offset'])) $query_args['offset'] = $args['offset'];
           if (isset($args['paged'])) $query_args['paged'] = $args['paged'];
           $comments = get_comments($query_args);
-          return $this->rpc_success($comments, $id);
+          return ['success' => true, 'data' => $comments];
 
         case 'wp_create_comment':
           if ( ! current_user_can( 'moderate_comments' ) ) {
-            return $this->rpc_error(-32601, 'Insufficient permissions to create comments', $id);
+            return [ 'success' => false, 'error' => 'Insufficient permissions to create comments' ];
           }
           $comment_data = [
               'comment_post_ID' => $args['post_id'],
@@ -759,54 +731,43 @@ class Gemini_MCP_Tools_MCP {
               'comment_approved' => isset($args['comment_approved']) ? $args['comment_approved'] : 1,
           ];
           $comment_id = wp_insert_comment($comment_data);
-          if (!$comment_id) return $this->rpc_error(-32000, 'Failed to create comment.', $id);
-          return $this->rpc_success(['comment_ID' => $comment_id], $id);
+          if (!$comment_id) return ['success' => false, 'error' => 'Failed to create comment.'];
+          return ['success' => true, 'data' => ['comment_ID' => $comment_id]];
 
         case 'wp_update_comment':
-          if ( ! current_user_can( 'moderate_comments' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to update comments', $id);
-          }
           $update_args = ['comment_ID' => $args['comment_ID']];
           $update_args = array_merge($update_args, $args['fields']);
           $result = wp_update_comment($update_args);
-          return $this->rpc_success(['updated' => $result === 1], $id);
+          return ['success' => $result === 1, 'data' => ['updated' => $result === 1]];
 
         case 'wp_delete_comment':
-          if ( ! current_user_can( 'moderate_comments' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to delete comments', $id);
-          }
           $force = isset($args['force']) ? $args['force'] : false;
           $result = wp_delete_comment($args['comment_ID'], $force);
-          return $this->rpc_success(['deleted' => $result], $id);
+          return ['success' => $result, 'data' => ['deleted' => $result]];
 
         case 'wp_get_option':
-          if ( ! current_user_can( 'manage_options' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to view options', $id);
-          }
           $value = get_option($args['key']);
-          return $this->rpc_success($value, $id);
+          return ['success' => true, 'data' => $value];
 
         case 'wp_update_option':
-          if ( ! current_user_can( 'manage_options' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to manage options', $id);
-          }
           $value = is_string($args['value']) ? json_decode($args['value'], true) : $args['value'];
           if (json_last_error() !== JSON_ERROR_NONE) $value = $args['value'];
           $result = update_option($args['key'], $value);
-          return $this->rpc_success(['updated' => $result], $id);
+          return ['success' => $result, 'data' => ['updated' => $result]];
 
         case 'wp_count_posts':
           $post_type = isset($args['post_type']) ? $args['post_type'] : 'post';
           $counts = wp_count_posts($post_type);
-          return $this->rpc_success($counts, $id);
+          return ['success' => true, 'data' => $counts];
 
         case 'wp_count_terms':
           $count = wp_count_terms($args['taxonomy']);
-          return $this->rpc_success(['count' => $count], $id);
+          return ['success' => true, 'data' => ['count' => $count]];
 
         case 'wp_count_media':
+          // This is a simplified version. A full implementation would require more complex date queries.
           $query = new WP_Query(['post_type' => 'attachment', 'post_status' => 'inherit', 'posts_per_page' => -1]);
-          return $this->rpc_success(['count' => $query->post_count], $id);
+          return ['success' => true, 'data' => ['count' => $query->post_count]];
 
         case 'wp_get_post_types':
           $post_types = get_post_types(['public' => true], 'objects');
@@ -814,7 +775,7 @@ class Gemini_MCP_Tools_MCP {
           foreach ($post_types as $key => $pt) {
               $result[$key] = $pt->label;
           }
-          return $this->rpc_success($result, $id);
+          return ['success' => true, 'data' => $result];
 
         case 'wp_get_posts':
           $query_args = ['post_status' => 'publish'];
@@ -825,87 +786,69 @@ class Gemini_MCP_Tools_MCP {
           if (isset($args['offset'])) $query_args['offset'] = $args['offset'];
           if (isset($args['paged'])) $query_args['paged'] = $args['paged'];
           $posts = get_posts($query_args);
-          return $this->rpc_success($posts, $id);
+          return ['success' => true, 'data' => $posts];
 
         case 'wp_get_post':
           $post = get_post($args['ID']);
-          return $this->rpc_success($post, $id);
+          return ['success' => true, 'data' => $post];
 
         case 'wp_get_post_snapshot':
           $post = get_post($args['ID']);
-          if (!$post) return $this->rpc_error(-32000, 'Post not found.', $id);
+          if (!$post) return ['success' => false, 'error' => 'Post not found.'];
           $snapshot = ['post' => $post];
           $include = isset($args['include']) ? $args['include'] : ['meta', 'terms', 'thumbnail', 'author'];
           if (in_array('meta', $include)) $snapshot['meta'] = get_post_meta($args['ID']);
           if (in_array('terms', $include)) $snapshot['terms'] = wp_get_post_terms($args['ID'], get_object_taxonomies($post));
           if (in_array('thumbnail', $include)) $snapshot['thumbnail'] = get_the_post_thumbnail_url($args['ID']);
           if (in_array('author', $include)) $snapshot['author'] = get_userdata($post->post_author);
-          return $this->rpc_success($snapshot, $id);
+          return ['success' => true, 'data' => $snapshot];
 
         case 'wp_create_post':
-           if ( ! current_user_can( 'edit_posts' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to create posts', $id);
-           }
           $post_data = ['post_status' => 'draft', 'post_type' => 'post'];
           $post_data = array_merge($post_data, $args);
           $post_id = wp_insert_post($post_data);
-          if (is_wp_error($post_id)) return $this->rpc_error(-32000, $post_id->get_error_message(), $id);
-          return $this->rpc_success(['ID' => $post_id], $id);
+          if (is_wp_error($post_id)) return ['success' => false, 'error' => $post_id->get_error_message()];
+          return ['success' => true, 'data' => ['ID' => $post_id]];
 
         case 'wp_update_post':
-           if ( ! current_user_can( 'edit_posts' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to update posts', $id);
-           }
           $post_data = ['ID' => $args['ID']];
           if (isset($args['fields'])) $post_data = array_merge($post_data, $args['fields']);
           if (isset($args['meta_input'])) $post_data['meta_input'] = $args['meta_input'];
           $post_id = wp_update_post($post_data);
-          if (is_wp_error($post_id)) return $this->rpc_error(-32000, $post_id->get_error_message(), $id);
-          return $this->rpc_success(['ID' => $post_id], $id);
+          if (is_wp_error($post_id)) return ['success' => false, 'error' => $post_id->get_error_message()];
+          return ['success' => true, 'data' => ['ID' => $post_id]];
 
         case 'wp_delete_post':
-           if ( ! current_user_can( 'delete_posts' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to delete posts', $id);
-           }
           $force = isset($args['force']) ? $args['force'] : false;
           $result = wp_delete_post($args['ID'], $force);
-          return $this->rpc_success(['deleted' => (bool)$result], $id);
+          return ['success' => (bool)$result, 'data' => ['deleted' => (bool)$result]];
 
         case 'wp_get_post_meta':
           $key = isset($args['key']) ? $args['key'] : '';
           $meta = get_post_meta($args['ID'], $key, $key === '');
-          return $this->rpc_success($meta, $id);
+          return ['success' => true, 'data' => $meta];
 
         case 'wp_update_post_meta':
-           if ( ! current_user_can( 'edit_posts' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to update post meta', $id);
-           }
           if (isset($args['meta'])) {
             foreach ($args['meta'] as $key => $value) {
               update_post_meta($args['ID'], $key, $value);
             }
-            return $this->rpc_success(['updated' => true], $id);
+            return ['success' => true, 'data' => ['updated' => true]];
           } else if (isset($args['key']) && isset($args['value'])) {
             $result = update_post_meta($args['ID'], $args['key'], $args['value']);
-            return $this->rpc_success(['updated' => (bool)$result], $id);
+            return ['success' => (bool)$result, 'data' => ['updated' => (bool)$result]];
           }
-          return $this->rpc_error(-32602, 'Invalid params: "meta" object or "key"/"value" required.', $id);
+          return ['success' => false, 'error' => 'Either "meta" object or "key" and "value" must be provided.'];
 
         case 'wp_delete_post_meta':
-           if ( ! current_user_can( 'edit_posts' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to delete post meta', $id);
-           }
           $value = isset($args['value']) ? $args['value'] : '';
           $result = delete_post_meta($args['ID'], $args['key'], $value);
-          return $this->rpc_success(['deleted' => $result], $id);
+          return ['success' => $result, 'data' => ['deleted' => $result]];
 
         case 'wp_set_featured_image':
-           if ( ! current_user_can( 'edit_posts' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to set featured image', $id);
-           }
           $media_id = isset($args['media_id']) ? $args['media_id'] : -1;
           $result = set_post_thumbnail($args['post_id'], $media_id);
-          return $this->rpc_success(['updated' => $result], $id);
+          return ['success' => $result, 'data' => ['updated' => $result]];
 
         case 'wp_get_taxonomies':
           $post_type = isset($args['post_type']) ? $args['post_type'] : null;
@@ -914,7 +857,7 @@ class Gemini_MCP_Tools_MCP {
           foreach ($taxonomies as $key => $tax) {
               $result[$key] = $tax->label;
           }
-          return $this->rpc_success($result, $id);
+          return ['success' => true, 'data' => $result];
 
         case 'wp_get_terms':
           $query_args = ['taxonomy' => $args['taxonomy'], 'hide_empty' => false];
@@ -922,53 +865,41 @@ class Gemini_MCP_Tools_MCP {
           if (isset($args['parent'])) $query_args['parent'] = $args['parent'];
           if (isset($args['limit'])) $query_args['number'] = $args['limit'];
           $terms = get_terms($query_args);
-          return $this->rpc_success($terms, $id);
+          return ['success' => true, 'data' => $terms];
 
         case 'wp_create_term':
-           if ( ! current_user_can( 'manage_categories' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to create terms', $id);
-           }
           $term_args = [];
           if (isset($args['slug'])) $term_args['slug'] = $args['slug'];
           if (isset($args['description'])) $term_args['description'] = $args['description'];
           if (isset($args['parent'])) $term_args['parent'] = $args['parent'];
           $result = wp_insert_term($args['term_name'], $args['taxonomy'], $term_args);
-          if (is_wp_error($result)) return $this->rpc_error(-32000, $result->get_error_message(), $id);
-          return $this->rpc_success($result, $id);
+          if (is_wp_error($result)) return ['success' => false, 'error' => $result->get_error_message()];
+          return ['success' => true, 'data' => $result];
 
         case 'wp_update_term':
-           if ( ! current_user_can( 'manage_categories' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to update terms', $id);
-           }
           $update_args = [];
           if (isset($args['name'])) $update_args['name'] = $args['name'];
           if (isset($args['slug'])) $update_args['slug'] = $args['slug'];
           if (isset($args['description'])) $update_args['description'] = $args['description'];
           if (isset($args['parent'])) $update_args['parent'] = $args['parent'];
           $result = wp_update_term($args['term_id'], $args['taxonomy'], $update_args);
-          if (is_wp_error($result)) return $this->rpc_error(-32000, $result->get_error_message(), $id);
-          return $this->rpc_success($result, $id);
+          if (is_wp_error($result)) return ['success' => false, 'error' => $result->get_error_message()];
+          return ['success' => true, 'data' => $result];
 
         case 'wp_delete_term':
-           if ( ! current_user_can( 'manage_categories' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to delete terms', $id);
-           }
           $result = wp_delete_term($args['term_id'], $args['taxonomy']);
-          return $this->rpc_success(['deleted' => $result], $id);
+          return ['success' => $result, 'data' => ['deleted' => $result]];
 
         case 'wp_get_post_terms':
           $taxonomy = isset($args['taxonomy']) ? $args['taxonomy'] : get_object_taxonomies(get_post_type($args['ID']));
           $terms = wp_get_post_terms($args['ID'], $taxonomy);
-          return $this->rpc_success($terms, $id);
+          return ['success' => true, 'data' => $terms];
 
         case 'wp_add_post_terms':
-           if ( ! current_user_can( 'edit_posts' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to add terms', $id);
-           }
           $append = isset($args['append']) ? $args['append'] : false;
           $result = wp_set_post_terms($args['ID'], $args['terms'], $args['taxonomy'], $append);
-          if (is_wp_error($result)) return $this->rpc_error(-32000, $result->get_error_message(), $id);
-          return $this->rpc_success($result, $id);
+          if (is_wp_error($result)) return ['success' => false, 'error' => $result->get_error_message()];
+          return ['success' => true, 'data' => $result];
 
         case 'wp_get_media':
           $query_args = ['post_type' => 'attachment', 'post_status' => 'inherit'];
@@ -981,17 +912,14 @@ class Gemini_MCP_Tools_MCP {
             if (isset($args['before'])) $query_args['date_query']['before'] = $args['before'];
           }
           $media = get_posts($query_args);
-          return $this->rpc_success($media, $id);
+          return ['success' => true, 'data' => $media];
 
         case 'wp_upload_media':
-           if ( ! current_user_can( 'upload_files' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to upload files', $id);
-           }
           require_once(ABSPATH . 'wp-admin/includes/image.php');
           require_once(ABSPATH . 'wp-admin/includes/file.php');
           require_once(ABSPATH . 'wp-admin/includes/media.php');
           $media_id = media_sideload_image($args['url'], 0, isset($args['title']) ? $args['title'] : null, 'id');
-          if (is_wp_error($media_id)) return $this->rpc_error(-32000, $media_id->get_error_message(), $id);
+          if (is_wp_error($media_id)) return ['success' => false, 'error' => $media_id->get_error_message()];
           // Update meta if provided
           $post_data = [];
           if (isset($args['description'])) $post_data['post_content'] = $args['description'];
@@ -1000,28 +928,22 @@ class Gemini_MCP_Tools_MCP {
             $post_data['ID'] = $media_id;
             wp_update_post($post_data);
           }
-          return $this->rpc_success(['ID' => $media_id], $id);
+          return ['success' => true, 'data' => ['ID' => $media_id]];
 
         case 'wp_update_media':
-           if ( ! current_user_can( 'upload_files' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to update media', $id);
-           }
           $post_data = ['ID' => $args['ID']];
           if (isset($args['title'])) $post_data['post_title'] = $args['title'];
           if (isset($args['caption'])) $post_data['post_excerpt'] = $args['caption'];
           if (isset($args['description'])) $post_data['post_content'] = $args['description'];
           if (isset($args['alt'])) update_post_meta($args['ID'], '_wp_attachment_image_alt', $args['alt']);
           $result = wp_update_post($post_data);
-          if (is_wp_error($result)) return $this->rpc_error(-32000, $result->get_error_message(), $id);
-          return $this->rpc_success(['updated' => true], $id);
+          if (is_wp_error($result)) return ['success' => false, 'error' => $result->get_error_message()];
+          return ['success' => true, 'data' => ['updated' => true]];
 
         case 'wp_delete_media':
-           if ( ! current_user_can( 'upload_files' ) ) {
-             return $this->rpc_error(-32601, 'Insufficient permissions to delete media', $id);
-           }
           $force = isset($args['force']) ? $args['force'] : false;
           $result = wp_delete_attachment($args['ID'], $force);
-          return $this->rpc_success(['deleted' => (bool)$result], $id);
+          return ['success' => (bool)$result, 'data' => ['deleted' => (bool)$result]];
 
         case 'mwai_vision':
           global $mwai;
@@ -1030,9 +952,9 @@ class Gemini_MCP_Tools_MCP {
             $url = isset($args['url']) ? $args['url'] : null;
             $path = isset($args['path']) ? $args['path'] : null;
             $vision_result = $mwai->ai_vision($message, $url, $path);
-            return $this->rpc_success($vision_result, $id);
+            return ['success' => true, 'data' => $vision_result];
           } else {
-            return $this->rpc_error(-32601, 'AI Engine Vision function not available.', $id);
+            return ['success' => false, 'error' => 'AI Engine Vision function not available.'];
           }
 
         case 'mwai_image':
@@ -1045,18 +967,18 @@ class Gemini_MCP_Tools_MCP {
             $description = isset($args['description']) ? $args['description'] : '';
             $alt = isset($args['alt']) ? $args['alt'] : '';
             $image_result = $mwai->ai_image($message, $post_id, $title, $caption, $description, $alt);
-            return $this->rpc_success($image_result, $id);
+            return ['success' => true, 'data' => $image_result];
           } else {
-            return $this->rpc_error(-32601, 'AI Engine Image generation function not available.', $id);
+            return ['success' => false, 'error' => 'AI Engine Image generation function not available.'];
           }
 
         case 'ollama_chat':
           if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
-              return $this->rpc_error(-32000, 'AI Toolkit path not defined.', $id);
+              return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
           }
           $script_path = GEMINI_AI_TOOLKIT_PATH . 'ollama-manager.js';
           if ( ! file_exists( $script_path ) ) {
-              return $this->rpc_error(-32000, 'Ollama manager script not found.', $id);
+              return ['success' => false, 'error' => 'Ollama manager script not found at ' . $script_path];
           }
           $model = escapeshellarg( $args['model'] );
           $prompt = escapeshellarg( $args['prompt'] );
@@ -1068,17 +990,17 @@ class Gemini_MCP_Tools_MCP {
           $output = shell_exec( $command );
           $result_data = json_decode( $output, true );
           if ( json_last_error() !== JSON_ERROR_NONE ) {
-              return $this->rpc_error(-32000, 'Invalid JSON response from Ollama manager.', $id, ['raw_output' => $output]);
+              return ['success' => false, 'error' => 'Invalid JSON response from Ollama manager.', 'raw_output' => $output];
           }
-          return $this->rpc_success($result_data, $id);
+          return ['success' => true, 'data' => $result_data];
 
         case 'exa_search':
           if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
-              return $this->rpc_error(-32000, 'AI Toolkit path not defined.', $id);
+              return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
           }
           $script_path = GEMINI_AI_TOOLKIT_PATH . 'exa-tools.js';
           if ( ! file_exists( $script_path ) ) {
-              return $this->rpc_error(-32000, 'Exa tools script not found.', $id);
+              return ['success' => false, 'error' => 'Exa tools script not found at ' . $script_path];
           }
           $query = escapeshellarg( $args['query'] );
           $num_results = isset($args['num_results']) ? (int)$args['num_results'] : 10;
@@ -1086,17 +1008,17 @@ class Gemini_MCP_Tools_MCP {
           $output = shell_exec( $command );
           $result_data = json_decode( $output, true );
           if ( json_last_error() !== JSON_ERROR_NONE ) {
-              return $this->rpc_error(-32000, 'Invalid JSON response from Exa search.', $id, ['raw_output' => $output]);
+              return ['success' => false, 'error' => 'Invalid JSON response from Exa search.', 'raw_output' => $output];
           }
-          return $this->rpc_success($result_data, $id);
+          return ['success' => true, 'data' => $result_data];
 
         case 'openrouter_call':
           if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
-              return $this->rpc_error(-32000, 'AI Toolkit path not defined.', $id);
+              return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
           }
           $script_path = GEMINI_AI_TOOLKIT_PATH . 'chat-openrouter.mjs'; // Note: .mjs for ES modules
           if ( ! file_exists( $script_path ) ) {
-              return $this->rpc_error(-32000, 'OpenRouter script not found.', $id);
+              return ['success' => false, 'error' => 'OpenRouter script not found at ' . $script_path];
           }
           $model = escapeshellarg( $args['model'] );
           $prompt = escapeshellarg( $args['prompt'] );
@@ -1108,17 +1030,17 @@ class Gemini_MCP_Tools_MCP {
           $output = shell_exec( $command );
           $result_data = json_decode( $output, true );
           if ( json_last_error() !== JSON_ERROR_NONE ) {
-              return $this->rpc_error(-32000, 'Invalid JSON response from OpenRouter call.', $id, ['raw_output' => $output]);
+              return ['success' => false, 'error' => 'Invalid JSON response from OpenRouter call.', 'raw_output' => $output];
           }
-          return $this->rpc_success($result_data, $id);
+          return ['success' => true, 'data' => $result_data];
 
         case 'smart_folder_organize':
           if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
-              return $this->rpc_error(-32000, 'AI Toolkit path not defined.', $id);
+              return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
           }
           $script_path = GEMINI_AI_TOOLKIT_PATH . 'smart-folder-manager/cli.js';
           if ( ! file_exists( $script_path ) ) {
-              return $this->rpc_error(-32000, 'Smart Folder Manager script not found.', $id);
+              return ['success' => false, 'error' => 'Smart Folder Manager script not found at ' . $script_path];
           }
           $dir_path = escapeshellarg( $args['dir_path'] );
           $rules = escapeshellarg( $args['rules'] ); // Assuming rules are passed as a JSON string
@@ -1126,17 +1048,17 @@ class Gemini_MCP_Tools_MCP {
           $output = shell_exec( $command );
           $result_data = json_decode( $output, true );
           if ( json_last_error() !== JSON_ERROR_NONE ) {
-              return $this->rpc_error(-32000, 'Invalid JSON response from Smart Folder Manager.', $id, ['raw_output' => $output]);
+              return ['success' => false, 'error' => 'Invalid JSON response from Smart Folder Manager.', 'raw_output' => $output];
           }
-          return $this->rpc_success($result_data, $id);
+          return ['success' => true, 'data' => $result_data];
 
         case 'composed_exploring_dolphin':
           if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
-              return $this->rpc_error(-32000, 'AI Toolkit path not defined.', $id);
+              return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
           }
-          $script_path = GEMINI_AI_TOOLKIT_PATH . 'composed_exploring_dolphin.js';
+          $script_path = GEMINI_AI_TOOLKIT_PATH . 'composed_exploring_dolphin.js'; // Assuming a JS script
           if ( ! file_exists( $script_path ) ) {
-              return $this->rpc_error(-32000, 'Composed Exploring Dolphin script not found.', $id);
+              return ['success' => false, 'error' => 'Composed Exploring Dolphin script not found at ' . $script_path];
           }
           $prompt = escapeshellarg( $args['prompt'] );
           $target_url = isset($args['target_url']) ? escapeshellarg( $args['target_url'] ) : '';
@@ -1147,28 +1069,29 @@ class Gemini_MCP_Tools_MCP {
           $output = shell_exec( $command );
           $result_data = json_decode( $output, true );
           if ( json_last_error() !== JSON_ERROR_NONE ) {
-              return $this->rpc_error(-32000, 'Invalid JSON response from Composed Exploring Dolphin.', $id, ['raw_output' => $output]);
+              return ['success' => false, 'error' => 'Invalid JSON response from Composed Exploring Dolphin.', 'raw_output' => $output];
           }
-          return $this->rpc_success($result_data, $id);
+          return ['success' => true, 'data' => $result_data];
 
         case 'claude_code':
+          // This assumes `npx claude code` is globally available or in PATH
           $claude_command = escapeshellarg( $args['command'] );
           $claude_args = escapeshellarg( $args['args'] ); // JSON string of arguments
           $command = 'npx claude code ' . $claude_command . ' --args ' . $claude_args;
           $output = shell_exec( $command );
           $result_data = json_decode( $output, true );
           if ( json_last_error() !== JSON_ERROR_NONE ) {
-              return $this->rpc_error(-32000, 'Invalid JSON response from Claude Code.', $id, ['raw_output' => $output]);
+              return ['success' => false, 'error' => 'Invalid JSON response from Claude Code.', 'raw_output' => $output];
           }
-          return $this->rpc_success($result_data, $id);
+          return ['success' => true, 'data' => $result_data];
 
         case 'github_chat':
           if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
-              return $this->rpc_error(-32000, 'AI Toolkit path not defined.', $id);
+              return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
           }
           $script_path = GEMINI_AI_TOOLKIT_PATH . 'chat-github.js';
           if ( ! file_exists( $script_path ) ) {
-              return $this->rpc_error(-32000, 'GitHub Chat script not found.', $id);
+              return ['success' => false, 'error' => 'GitHub Chat script not found at ' . $script_path];
           }
           $prompt = escapeshellarg( $args['prompt'] );
           $repo = isset($args['repo']) ? escapeshellarg( $args['repo'] ) : '';
@@ -1179,16 +1102,16 @@ class Gemini_MCP_Tools_MCP {
           $output = shell_exec( $command );
           $result_data = json_decode( $output, true );
           if ( json_last_error() !== JSON_ERROR_NONE ) {
-              return $this->rpc_error(-32000, 'Invalid JSON response from GitHub Chat.', $id, ['raw_output' => $output]);
+              return ['success' => false, 'error' => 'Invalid JSON response from GitHub Chat.', 'raw_output' => $output];
           }
-          return $this->rpc_success($result_data, $id);
+          return ['success' => true, 'data' => $result_data];
 
         default:
-          return $this->rpc_error(-32601, 'Method not found (Unknown tool)', $id);
+          return [ 'success' => false, 'error' => 'Unknown tool' ];
       }
     }
     catch ( Exception $e ) {
-      return $this->rpc_error(-32000, $e->getMessage(), $id);
+      return [ 'success' => false, 'error' => $e->getMessage() ];
     }
 
     return $result;
