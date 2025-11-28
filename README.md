@@ -4,7 +4,7 @@ A CLI-based environment for interacting with and managing a WordPress site using
 
 ## Overview
 
-This project provides a powerful command-line interface to manage a complex, multisite WordPress installation. It leverages a custom set of 37 Media Control Protocol (MCP) functions to interact with various aspects of WordPress, from content and user management to site options and media.
+This project provides a powerful command-line interface to manage a complex, multisite WordPress installation. It leverages a custom set of 37 Model Context Protocol (MCP) functions to interact with various aspects of WordPress, from content and user management to site options and media.
 
 The environment is designed for developers and administrators to perform complex tasks, automate workflows, and assist with content creation and site maintenance through AI-powered features.
 
