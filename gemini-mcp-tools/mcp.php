@@ -14,18 +14,6 @@ class Gemini_MCP_Tools_MCP {
     }
   }
 
-  /**
-   * Security verification placeholder.
-   * The attached logic calls this method, so it must exist to prevent errors.
-   */
-  public function verify_security( $tool, $args ) {
-    // You can add global security logic here (e.g., check if user is logged in)
-    if ( ! is_user_logged_in() ) {
-        // return [ 'success' => false, 'error' => 'Authentication required' ];
-    }
-    return true;
-  }
-
   public function register_tools( $tools ) {
     $gemini_tools = [
       [
@@ -640,8 +628,8 @@ class Gemini_MCP_Tools_MCP {
 
   public function handle_tool_execution( $result, $tool, $args, $id ) {
 
-    // Security verification (Applied from attached version)
-    $security_check = $this->verify_security( $tool, $args );
+      // Security verification
+    $security_check = gemini_mcp_verify_security( $tool, $args );
     if ( $security_check !== true ) {
         return $security_check;
     }
@@ -653,9 +641,6 @@ class Gemini_MCP_Tools_MCP {
     try {
       switch ( $tool ) {
         case 'wp_list_plugins':
-          if ( ! current_user_can( 'activate_plugins' ) ) {
-            return [ 'success' => false, 'error' => 'Insufficient permissions to list plugins' ];
-          }
           if ( ! function_exists( 'get_plugins' ) ) {
             require_once ABSPATH . 'wp-admin/includes/plugin.php';
           }
@@ -670,9 +655,6 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $filtered_plugins];
 
         case 'wp_get_users':
-          if ( ! current_user_can( 'list_users' ) ) {
-            return [ 'success' => false, 'error' => 'Insufficient permissions to list users' ];
-          }
           $query_args = ['fields' => ['ID', 'user_login', 'display_name', 'roles']];
           if (isset($args['search'])) $query_args['search'] = '*' . $args['search'] . '*';
           if (isset($args['role'])) $query_args['role'] = $args['role'];
@@ -683,9 +665,6 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $users];
 
         case 'wp_create_user':
-          if ( ! current_user_can( 'create_users' ) ) {
-            return [ 'success' => false, 'error' => 'Insufficient permissions to create users' ];
-          }
           $user_id = wp_create_user($args['user_login'], isset($args['user_pass']) ? $args['user_pass'] : wp_generate_password(), $args['user_email']);
           if (is_wp_error($user_id)) return ['success' => false, 'error' => $user_id->get_error_message()];
           $update_args = ['ID' => $user_id];
@@ -695,9 +674,6 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => ['ID' => $user_id]];
 
         case 'wp_update_user':
-          if ( ! current_user_can( 'edit_users' ) ) {
-            return [ 'success' => false, 'error' => 'Insufficient permissions to edit users' ];
-          }
           $update_args = ['ID' => $args['ID']];
           $update_args = array_merge($update_args, $args['fields']);
           $user_id = wp_update_user($update_args);
@@ -705,9 +681,6 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => ['ID' => $user_id]];
 
         case 'wp_get_comments':
-          if ( ! current_user_can( 'moderate_comments' ) ) {
-            return [ 'success' => false, 'error' => 'Insufficient permissions to access comments' ];
-          }
           $query_args = [];
           if (isset($args['post_id'])) $query_args['post_id'] = $args['post_id'];
           if (isset($args['status'])) $query_args['status'] = $args['status'];
@@ -719,9 +692,6 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $comments];
 
         case 'wp_create_comment':
-          if ( ! current_user_can( 'moderate_comments' ) ) {
-            return [ 'success' => false, 'error' => 'Insufficient permissions to create comments' ];
-          }
           $comment_data = [
               'comment_post_ID' => $args['post_id'],
               'comment_content' => $args['comment_content'],
@@ -1115,4 +1085,5 @@ class Gemini_MCP_Tools_MCP {
     }
 
     return $result;
-    }
+  }
+}
