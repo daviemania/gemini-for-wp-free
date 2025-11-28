@@ -1,6 +1,6 @@
 # Gemini for WordPress (Beta)
 
-A CLI-based environment for interacting with and managing a WordPress site using AI-powered tools and a custom Media Control Protocol (MCP).
+A CLI-based environment for interacting with and managing a WordPress site using AI-powered tools and a custom Model Context Protocol (MCP).
 
 ## Overview
 
