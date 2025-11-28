@@ -62,6 +62,8 @@ if (!defined("ABSPATH")) {
 require_once plugin_dir_path(__FILE__) . "mcp.php";
 require_once __DIR__ . "/freemius-gate.php";
 
+define( 'GEMINI_AI_TOOLKIT_PATH', ABSPATH . 'wp-content/gemini-ai-toolkit/' );
+
 // Initialize the MCP tools
 function gemini_mcp_tools_init()
 {

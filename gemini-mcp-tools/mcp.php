@@ -527,7 +527,100 @@ class Gemini_MCP_Tools_MCP {
           ],
           'required' => ['message']
         ]
-      ]
+      ],
+      [
+        'name' => 'ollama_chat',
+        'description' => 'Initiates a chat with the Ollama language model from the AI Toolkit.',
+        'category' => 'AI Toolkit',
+        'inputSchema' => [
+          'type' => 'object',
+          'properties' => [
+            'model' => ['type' => 'string', 'description' => 'The Ollama model to use (e.g., llama2).'],
+            'prompt' => ['type' => 'string', 'description' => 'The chat prompt.'],
+            'system' => ['type' => 'string', 'description' => 'Optional system prompt.']
+          ],
+          'required' => ['model', 'prompt']
+        ]
+      ],
+      [
+        'name' => 'exa_search',
+        'description' => 'Performs a search using the Exa search tool from the AI Toolkit.',
+        'category' => 'AI Toolkit',
+        'inputSchema' => [
+          'type' => 'object',
+          'properties' => [
+            'query' => ['type' => 'string', 'description' => 'The search query.'],
+            'num_results' => ['type' => 'integer', 'description' => 'Number of results to return (max 10).']
+          ],
+          'required' => ['query']
+        ]
+      ],
+      [
+        'name' => 'openrouter_call',
+        'description' => 'Makes a call to the OpenRouter API from the AI Toolkit.',
+        'category' => 'AI Toolkit',
+        'inputSchema' => [
+          'type' => 'object',
+          'properties' => [
+            'model' => ['type' => 'string', 'description' => 'The OpenRouter model to use.'],
+            'prompt' => ['type' => 'string', 'description' => 'The prompt for the OpenRouter call.'],
+            'temperature' => ['type' => 'number', 'description' => 'Optional: Sampling temperature.']
+          ],
+          'required' => ['model', 'prompt']
+        ]
+      ],
+      [
+        'name' => 'smart_folder_organize',
+        'description' => 'Organizes files in a specified folder using the Smart Folder Manager from the AI Toolkit.',
+        'category' => 'AI Toolkit',
+        'inputSchema' => [
+          'type' => 'object',
+          'properties' => [
+            'dir_path' => ['type' => 'string', 'description' => 'The path to the directory to organize.'],
+            'rules' => ['type' => 'string', 'description' => 'JSON string of organization rules.']
+          ],
+          'required' => ['dir_path', 'rules']
+        ]
+      ],
+      [
+        'name' => 'composed_exploring_dolphin',
+        'description' => 'Executes the composed exploring dolphin script from the AI Toolkit for advanced automation.',
+        'category' => 'AI Toolkit',
+        'inputSchema' => [
+          'type' => 'object',
+          'properties' => [
+            'prompt' => ['type' => 'string', 'description' => 'The prompt for the dolphin script.'],
+            'target_url' => ['type' => 'string', 'description' => 'Optional: Target URL for web exploration.']
+          ],
+          'required' => ['prompt']
+        ]
+      ],
+      [
+        'name' => 'claude_code',
+        'description' => 'Executes code-related tasks using Anthropic\'s Claude AI via the AI Toolkit.',
+        'category' => 'AI Toolkit',
+        'inputSchema' => [
+          'type' => 'object',
+          'properties' => [
+            'command' => ['type' => 'string', 'description' => 'The Claude command to execute (e.g., \'analyze\', \'refactor\').'],
+            'args' => ['type' => 'string', 'description' => 'JSON string of arguments for the Claude command.']
+          ],
+          'required' => ['command', 'args']
+        ]
+      ],
+      [
+        'name' => 'github_chat',
+        'description' => 'Initiates a chat with GitHub-integrated AI for code assistance via the AI Toolkit.',
+        'category' => 'AI Toolkit',
+        'inputSchema' => [
+          'type' => 'object',
+          'properties' => [
+            'prompt' => ['type' => 'string', 'description' => 'The chat prompt.'],
+            'repo' => ['type' => 'string', 'description' => 'Optional: GitHub repository to provide context.']
+          ],
+          'required' => ['prompt']
+        ]
+      }
     ];
 
     return array_merge($tools, $gemini_tools);
@@ -841,6 +934,140 @@ class Gemini_MCP_Tools_MCP {
           } else {
             return ['success' => false, 'error' => 'AI Engine Image generation function not available.'];
           }
+
+        case 'ollama_chat':
+          if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
+              return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
+          }
+          $script_path = GEMINI_AI_TOOLKIT_PATH . 'ollama-manager.js';
+          if ( ! file_exists( $script_path ) ) {
+              return ['success' => false, 'error' => 'Ollama manager script not found at ' . $script_path];
+          }
+          $model = escapeshellarg( $args['model'] );
+          $prompt = escapeshellarg( $args['prompt'] );
+          $system = isset($args['system']) ? escapeshellarg( $args['system'] ) : '';
+          $command = 'node ' . escapeshellarg( $script_path ) . ' chat ' . $model . ' ' . $prompt;
+          if ( ! empty( $system ) ) {
+              $command .= ' --system ' . $system;
+          }
+          $output = shell_exec( $command );
+          $result_data = json_decode( $output, true );
+          if ( json_last_error() !== JSON_ERROR_NONE ) {
+              return ['success' => false, 'error' => 'Invalid JSON response from Ollama manager.', 'raw_output' => $output];
+          }
+          return ['success' => true, 'data' => $result_data];
+
+        case 'exa_search':
+          if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
+              return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
+          }
+          $script_path = GEMINI_AI_TOOLKIT_PATH . 'exa-tools.js';
+          if ( ! file_exists( $script_path ) ) {
+              return ['success' => false, 'error' => 'Exa tools script not found at ' . $script_path];
+          }
+          $query = escapeshellarg( $args['query'] );
+          $num_results = isset($args['num_results']) ? (int)$args['num_results'] : 10;
+          $command = 'node ' . escapeshellarg( $script_path ) . ' search ' . $query . ' --num-results ' . escapeshellarg( $num_results );
+          $output = shell_exec( $command );
+          $result_data = json_decode( $output, true );
+          if ( json_last_error() !== JSON_ERROR_NONE ) {
+              return ['success' => false, 'error' => 'Invalid JSON response from Exa search.', 'raw_output' => $output];
+          }
+          return ['success' => true, 'data' => $result_data];
+
+        case 'openrouter_call':
+          if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
+              return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
+          }
+          $script_path = GEMINI_AI_TOOLKIT_PATH . 'chat-openrouter.mjs'; // Note: .mjs for ES modules
+          if ( ! file_exists( $script_path ) ) {
+              return ['success' => false, 'error' => 'OpenRouter script not found at ' . $script_path];
+          }
+          $model = escapeshellarg( $args['model'] );
+          $prompt = escapeshellarg( $args['prompt'] );
+          $temperature = isset($args['temperature']) ? (float)$args['temperature'] : null;
+          $command = 'node ' . escapeshellarg( $script_path ) . ' --model ' . $model . ' --prompt ' . $prompt;
+          if ( ! is_null( $temperature ) ) {
+              $command .= ' --temperature ' . escapeshellarg( $temperature );
+          }
+          $output = shell_exec( $command );
+          $result_data = json_decode( $output, true );
+          if ( json_last_error() !== JSON_ERROR_NONE ) {
+              return ['success' => false, 'error' => 'Invalid JSON response from OpenRouter call.', 'raw_output' => $output];
+          }
+          return ['success' => true, 'data' => $result_data];
+
+        case 'smart_folder_organize':
+          if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
+              return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
+          }
+          $script_path = GEMINI_AI_TOOLKIT_PATH . 'smart-folder-manager/cli.js';
+          if ( ! file_exists( $script_path ) ) {
+              return ['success' => false, 'error' => 'Smart Folder Manager script not found at ' . $script_path];
+          }
+          $dir_path = escapeshellarg( $args['dir_path'] );
+          $rules = escapeshellarg( $args['rules'] ); // Assuming rules are passed as a JSON string
+          $command = 'node ' . escapeshellarg( $script_path ) . ' organize ' . $dir_path . ' ' . $rules;
+          $output = shell_exec( $command );
+          $result_data = json_decode( $output, true );
+          if ( json_last_error() !== JSON_ERROR_NONE ) {
+              return ['success' => false, 'error' => 'Invalid JSON response from Smart Folder Manager.', 'raw_output' => $output];
+          }
+          return ['success' => true, 'data' => $result_data];
+
+        case 'composed_exploring_dolphin':
+          if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
+              return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
+          }
+          $script_path = GEMINI_AI_TOOLKIT_PATH . 'composed_exploring_dolphin.js'; // Assuming a JS script
+          if ( ! file_exists( $script_path ) ) {
+              return ['success' => false, 'error' => 'Composed Exploring Dolphin script not found at ' . $script_path];
+          }
+          $prompt = escapeshellarg( $args['prompt'] );
+          $target_url = isset($args['target_url']) ? escapeshellarg( $args['target_url'] ) : '';
+          $command = 'node ' . escapeshellarg( $script_path ) . ' --prompt ' . $prompt;
+          if ( ! empty( $target_url ) ) {
+              $command .= ' --target-url ' . $target_url;
+          }
+          $output = shell_exec( $command );
+          $result_data = json_decode( $output, true );
+          if ( json_last_error() !== JSON_ERROR_NONE ) {
+              return ['success' => false, 'error' => 'Invalid JSON response from Composed Exploring Dolphin.', 'raw_output' => $output];
+          }
+          return ['success' => true, 'data' => $result_data];
+
+        case 'claude_code':
+          // This assumes `npx claude code` is globally available or in PATH
+          $claude_command = escapeshellarg( $args['command'] );
+          $claude_args = escapeshellarg( $args['args'] ); // JSON string of arguments
+          $command = 'npx claude code ' . $claude_command . ' --args ' . $claude_args;
+          $output = shell_exec( $command );
+          $result_data = json_decode( $output, true );
+          if ( json_last_error() !== JSON_ERROR_NONE ) {
+              return ['success' => false, 'error' => 'Invalid JSON response from Claude Code.', 'raw_output' => $output];
+          }
+          return ['success' => true, 'data' => $result_data];
+
+        case 'github_chat':
+          if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
+              return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
+          }
+          $script_path = GEMINI_AI_TOOLKIT_PATH . 'chat-github.js';
+          if ( ! file_exists( $script_path ) ) {
+              return ['success' => false, 'error' => 'GitHub Chat script not found at ' . $script_path];
+          }
+          $prompt = escapeshellarg( $args['prompt'] );
+          $repo = isset($args['repo']) ? escapeshellarg( $args['repo'] ) : '';
+          $command = 'node ' . escapeshellarg( $script_path ) . ' --prompt ' . $prompt;
+          if ( ! empty( $repo ) ) {
+              $command .= ' --repo ' . $repo;
+          }
+          $output = shell_exec( $command );
+          $result_data = json_decode( $output, true );
+          if ( json_last_error() !== JSON_ERROR_NONE ) {
+              return ['success' => false, 'error' => 'Invalid JSON response from GitHub Chat.', 'raw_output' => $output];
+          }
+          return ['success' => true, 'data' => $result_data];
 
         default:
           return [ 'success' => false, 'error' => 'Unknown tool' ];
