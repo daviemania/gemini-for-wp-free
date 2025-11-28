@@ -1,11 +1,11 @@
 <?php
 
 class Gemini_MCP_Tools_MCP {
-
+  
   public function __construct() {
     add_action( 'init', array( $this, 'init' ), 20 );
   }
-
+  
   public function init() {
     global $mwai;
     if ( isset( $mwai ) ) {
@@ -13,7 +13,7 @@ class Gemini_MCP_Tools_MCP {
       add_filter( 'mwai_mcp_callback', array( $this, 'handle_tool_execution' ), 10, 4 );
     }
   }
-
+  
   public function register_tools( $tools ) {
     $gemini_tools = [
       [
@@ -625,22 +625,25 @@ class Gemini_MCP_Tools_MCP {
 
     return array_merge($tools, $gemini_tools);
   }
-
+  
   public function handle_tool_execution( $result, $tool, $args, $id ) {
-
-      // Security verification
-    $security_check = gemini_mcp_verify_security( $tool, $args );
+    // Security verification
+    $security_check = $this->verify_security( $tool, $args );
     if ( $security_check !== true ) {
         return $security_check;
     }
-
+    
     if ( strpos( $tool, 'wp_' ) !== 0 && strpos( $tool, 'mwai_' ) !== 0 ) {
       return $result;
     }
-
+    
     try {
       switch ( $tool ) {
         case 'wp_list_plugins':
+          if ( ! current_user_can( 'activate_plugins' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to list plugins' ];
+          }
+          
           if ( ! function_exists( 'get_plugins' ) ) {
             require_once ABSPATH . 'wp-admin/includes/plugin.php';
           }
@@ -655,6 +658,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $filtered_plugins];
 
         case 'wp_get_users':
+          if ( ! current_user_can( 'list_users' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to list users' ];
+          }
+          
           $query_args = ['fields' => ['ID', 'user_login', 'display_name', 'roles']];
           if (isset($args['search'])) $query_args['search'] = '*' . $args['search'] . '*';
           if (isset($args['role'])) $query_args['role'] = $args['role'];
@@ -665,6 +672,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $users];
 
         case 'wp_create_user':
+          if ( ! current_user_can( 'create_users' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to create users' ];
+          }
+          
           $user_id = wp_create_user($args['user_login'], isset($args['user_pass']) ? $args['user_pass'] : wp_generate_password(), $args['user_email']);
           if (is_wp_error($user_id)) return ['success' => false, 'error' => $user_id->get_error_message()];
           $update_args = ['ID' => $user_id];
@@ -674,6 +685,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => ['ID' => $user_id]];
 
         case 'wp_update_user':
+          if ( ! current_user_can( 'edit_users' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to edit users' ];
+          }
+          
           $update_args = ['ID' => $args['ID']];
           $update_args = array_merge($update_args, $args['fields']);
           $user_id = wp_update_user($update_args);
@@ -681,6 +696,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => ['ID' => $user_id]];
 
         case 'wp_get_comments':
+          if ( ! current_user_can( 'moderate_comments' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to access comments' ];
+          }
+          
           $query_args = [];
           if (isset($args['post_id'])) $query_args['post_id'] = $args['post_id'];
           if (isset($args['status'])) $query_args['status'] = $args['status'];
@@ -692,6 +711,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $comments];
 
         case 'wp_create_comment':
+          if ( ! current_user_can( 'moderate_comments' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to create comments' ];
+          }
+          
           $comment_data = [
               'comment_post_ID' => $args['post_id'],
               'comment_content' => $args['comment_content'],
@@ -705,41 +728,73 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => ['comment_ID' => $comment_id]];
 
         case 'wp_update_comment':
+          if ( ! current_user_can( 'moderate_comments' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to edit comments' ];
+          }
+          
           $update_args = ['comment_ID' => $args['comment_ID']];
           $update_args = array_merge($update_args, $args['fields']);
           $result = wp_update_comment($update_args);
           return ['success' => $result === 1, 'data' => ['updated' => $result === 1]];
 
         case 'wp_delete_comment':
+          if ( ! current_user_can( 'moderate_comments' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to delete comments' ];
+          }
+          
           $force = isset($args['force']) ? $args['force'] : false;
           $result = wp_delete_comment($args['comment_ID'], $force);
           return ['success' => $result, 'data' => ['deleted' => $result]];
 
         case 'wp_get_option':
+          if ( ! current_user_can( 'manage_options' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to access options' ];
+          }
+          
           $value = get_option($args['key']);
           return ['success' => true, 'data' => $value];
 
         case 'wp_update_option':
+          if ( ! current_user_can( 'manage_options' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to update options' ];
+          }
+          
           $value = is_string($args['value']) ? json_decode($args['value'], true) : $args['value'];
           if (json_last_error() !== JSON_ERROR_NONE) $value = $args['value'];
           $result = update_option($args['key'], $value);
           return ['success' => $result, 'data' => ['updated' => $result]];
 
         case 'wp_count_posts':
+          if ( ! current_user_can( 'edit_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to count posts' ];
+          }
+          
           $post_type = isset($args['post_type']) ? $args['post_type'] : 'post';
           $counts = wp_count_posts($post_type);
           return ['success' => true, 'data' => $counts];
 
         case 'wp_count_terms':
+          if ( ! current_user_can( 'manage_categories' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to count terms' ];
+          }
+          
           $count = wp_count_terms($args['taxonomy']);
           return ['success' => true, 'data' => ['count' => $count]];
 
         case 'wp_count_media':
+          if ( ! current_user_can( 'upload_files' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to count media' ];
+          }
+          
           // This is a simplified version. A full implementation would require more complex date queries.
           $query = new WP_Query(['post_type' => 'attachment', 'post_status' => 'inherit', 'posts_per_page' => -1]);
           return ['success' => true, 'data' => ['count' => $query->post_count]];
 
         case 'wp_get_post_types':
+          if ( ! current_user_can( 'edit_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to access post types' ];
+          }
+          
           $post_types = get_post_types(['public' => true], 'objects');
           $result = [];
           foreach ($post_types as $key => $pt) {
@@ -748,6 +803,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $result];
 
         case 'wp_get_posts':
+          if ( ! current_user_can( 'edit_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to access posts' ];
+          }
+          
           $query_args = ['post_status' => 'publish'];
           if (isset($args['post_type'])) $query_args['post_type'] = $args['post_type'];
           if (isset($args['post_status'])) $query_args['post_status'] = $args['post_status'];
@@ -759,10 +818,18 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $posts];
 
         case 'wp_get_post':
+          if ( ! current_user_can( 'edit_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to access posts' ];
+          }
+          
           $post = get_post($args['ID']);
           return ['success' => true, 'data' => $post];
 
         case 'wp_get_post_snapshot':
+          if ( ! current_user_can( 'edit_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to access posts' ];
+          }
+          
           $post = get_post($args['ID']);
           if (!$post) return ['success' => false, 'error' => 'Post not found.'];
           $snapshot = ['post' => $post];
@@ -774,6 +841,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $snapshot];
 
         case 'wp_create_post':
+          if ( ! current_user_can( 'edit_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to create posts' ];
+          }
+          
           $post_data = ['post_status' => 'draft', 'post_type' => 'post'];
           $post_data = array_merge($post_data, $args);
           $post_id = wp_insert_post($post_data);
@@ -781,6 +852,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => ['ID' => $post_id]];
 
         case 'wp_update_post':
+          if ( ! current_user_can( 'edit_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to edit posts' ];
+          }
+          
           $post_data = ['ID' => $args['ID']];
           if (isset($args['fields'])) $post_data = array_merge($post_data, $args['fields']);
           if (isset($args['meta_input'])) $post_data['meta_input'] = $args['meta_input'];
@@ -789,16 +864,28 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => ['ID' => $post_id]];
 
         case 'wp_delete_post':
+          if ( ! current_user_can( 'delete_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to delete posts' ];
+          }
+          
           $force = isset($args['force']) ? $args['force'] : false;
           $result = wp_delete_post($args['ID'], $force);
           return ['success' => (bool)$result, 'data' => ['deleted' => (bool)$result]];
 
         case 'wp_get_post_meta':
+          if ( ! current_user_can( 'edit_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to access post meta' ];
+          }
+          
           $key = isset($args['key']) ? $args['key'] : '';
           $meta = get_post_meta($args['ID'], $key, $key === '');
           return ['success' => true, 'data' => $meta];
 
         case 'wp_update_post_meta':
+          if ( ! current_user_can( 'edit_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to edit post meta' ];
+          }
+          
           if (isset($args['meta'])) {
             foreach ($args['meta'] as $key => $value) {
               update_post_meta($args['ID'], $key, $value);
@@ -811,16 +898,28 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => false, 'error' => 'Either "meta" object or "key" and "value" must be provided.'];
 
         case 'wp_delete_post_meta':
+          if ( ! current_user_can( 'edit_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to delete post meta' ];
+          }
+          
           $value = isset($args['value']) ? $args['value'] : '';
           $result = delete_post_meta($args['ID'], $args['key'], $value);
           return ['success' => $result, 'data' => ['deleted' => $result]];
 
         case 'wp_set_featured_image':
+          if ( ! current_user_can( 'edit_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to set featured images' ];
+          }
+          
           $media_id = isset($args['media_id']) ? $args['media_id'] : -1;
           $result = set_post_thumbnail($args['post_id'], $media_id);
           return ['success' => $result, 'data' => ['updated' => $result]];
 
         case 'wp_get_taxonomies':
+          if ( ! current_user_can( 'manage_categories' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to access taxonomies' ];
+          }
+          
           $post_type = isset($args['post_type']) ? $args['post_type'] : null;
           $taxonomies = get_object_taxonomies($post_type, 'objects');
           $result = [];
@@ -830,6 +929,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $result];
 
         case 'wp_get_terms':
+          if ( ! current_user_can( 'manage_categories' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to access terms' ];
+          }
+          
           $query_args = ['taxonomy' => $args['taxonomy'], 'hide_empty' => false];
           if (isset($args['search'])) $query_args['search'] = $args['search'];
           if (isset($args['parent'])) $query_args['parent'] = $args['parent'];
@@ -838,6 +941,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $terms];
 
         case 'wp_create_term':
+          if ( ! current_user_can( 'manage_categories' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to create terms' ];
+          }
+          
           $term_args = [];
           if (isset($args['slug'])) $term_args['slug'] = $args['slug'];
           if (isset($args['description'])) $term_args['description'] = $args['description'];
@@ -847,6 +954,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $result];
 
         case 'wp_update_term':
+          if ( ! current_user_can( 'manage_categories' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to edit terms' ];
+          }
+          
           $update_args = [];
           if (isset($args['name'])) $update_args['name'] = $args['name'];
           if (isset($args['slug'])) $update_args['slug'] = $args['slug'];
@@ -857,21 +968,37 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $result];
 
         case 'wp_delete_term':
+          if ( ! current_user_can( 'manage_categories' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to delete terms' ];
+          }
+          
           $result = wp_delete_term($args['term_id'], $args['taxonomy']);
           return ['success' => $result, 'data' => ['deleted' => $result]];
 
         case 'wp_get_post_terms':
+          if ( ! current_user_can( 'manage_categories' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to access post terms' ];
+          }
+          
           $taxonomy = isset($args['taxonomy']) ? $args['taxonomy'] : get_object_taxonomies(get_post_type($args['ID']));
           $terms = wp_get_post_terms($args['ID'], $taxonomy);
           return ['success' => true, 'data' => $terms];
 
         case 'wp_add_post_terms':
+          if ( ! current_user_can( 'manage_categories' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to manage post terms' ];
+          }
+          
           $append = isset($args['append']) ? $args['append'] : false;
           $result = wp_set_post_terms($args['ID'], $args['terms'], $args['taxonomy'], $append);
           if (is_wp_error($result)) return ['success' => false, 'error' => $result->get_error_message()];
           return ['success' => true, 'data' => $result];
 
         case 'wp_get_media':
+          if ( ! current_user_can( 'upload_files' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to access media' ];
+          }
+          
           $query_args = ['post_type' => 'attachment', 'post_status' => 'inherit'];
           if (isset($args['search'])) $query_args['s'] = $args['search'];
           if (isset($args['limit'])) $query_args['posts_per_page'] = $args['limit'];
@@ -885,6 +1012,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $media];
 
         case 'wp_upload_media':
+          if ( ! current_user_can( 'upload_files' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to upload media' ];
+          }
+          
           require_once(ABSPATH . 'wp-admin/includes/image.php');
           require_once(ABSPATH . 'wp-admin/includes/file.php');
           require_once(ABSPATH . 'wp-admin/includes/media.php');
@@ -901,6 +1032,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => ['ID' => $media_id]];
 
         case 'wp_update_media':
+          if ( ! current_user_can( 'upload_files' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to edit media' ];
+          }
+          
           $post_data = ['ID' => $args['ID']];
           if (isset($args['title'])) $post_data['post_title'] = $args['title'];
           if (isset($args['caption'])) $post_data['post_excerpt'] = $args['caption'];
@@ -911,11 +1046,19 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => ['updated' => true]];
 
         case 'wp_delete_media':
+          if ( ! current_user_can( 'upload_files' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to delete media' ];
+          }
+          
           $force = isset($args['force']) ? $args['force'] : false;
           $result = wp_delete_attachment($args['ID'], $force);
           return ['success' => (bool)$result, 'data' => ['deleted' => (bool)$result]];
 
         case 'mwai_vision':
+          if ( ! current_user_can( 'edit_posts' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to use vision AI' ];
+          }
+          
           global $mwai;
           if (isset($mwai) && method_exists($mwai, 'ai_vision')) {
             $message = $args['message'];
@@ -928,6 +1071,10 @@ class Gemini_MCP_Tools_MCP {
           }
 
         case 'mwai_image':
+          if ( ! current_user_can( 'upload_files' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to generate images' ];
+          }
+          
           global $mwai;
           if (isset($mwai) && method_exists($mwai, 'ai_image')) {
             $message = $args['message'];
@@ -943,6 +1090,16 @@ class Gemini_MCP_Tools_MCP {
           }
 
         case 'ollama_chat':
+          if ( ! current_user_can( 'manage_options' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to use Ollama' ];
+          }
+          
+          // Input validation
+          $allowed_models = [ 'llama2', 'mistral', 'codellama', 'phi', 'gemma' ];
+          if ( ! in_array( $args['model'], $allowed_models ) ) {
+            return [ 'success' => false, 'error' => 'Invalid model specified' ];
+          }
+          
           if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
               return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
           }
@@ -965,6 +1122,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $result_data];
 
         case 'exa_search':
+          if ( ! current_user_can( 'manage_options' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to use Exa search' ];
+          }
+          
           if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
               return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
           }
@@ -983,6 +1144,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $result_data];
 
         case 'openrouter_call':
+          if ( ! current_user_can( 'manage_options' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to use OpenRouter' ];
+          }
+          
           if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
               return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
           }
@@ -1005,6 +1170,16 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $result_data];
 
         case 'smart_folder_organize':
+          if ( ! current_user_can( 'manage_options' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to use Smart Folder Manager' ];
+          }
+          
+          // Path traversal protection
+          $dir_path = sanitize_text_field( $args['dir_path'] );
+          if ( strpos( $dir_path, '..' ) !== false || strpos( $dir_path, '~' ) !== false ) {
+            return [ 'success' => false, 'error' => 'Invalid directory path' ];
+          }
+          
           if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
               return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
           }
@@ -1023,6 +1198,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $result_data];
 
         case 'composed_exploring_dolphin':
+          if ( ! current_user_can( 'manage_options' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to use Composed Exploring Dolphin' ];
+          }
+          
           if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
               return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
           }
@@ -1044,6 +1223,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $result_data];
 
         case 'claude_code':
+          if ( ! current_user_can( 'manage_options' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to use Claude Code' ];
+          }
+          
           // This assumes `npx claude code` is globally available or in PATH
           $claude_command = escapeshellarg( $args['command'] );
           $claude_args = escapeshellarg( $args['args'] ); // JSON string of arguments
@@ -1056,6 +1239,10 @@ class Gemini_MCP_Tools_MCP {
           return ['success' => true, 'data' => $result_data];
 
         case 'github_chat':
+          if ( ! current_user_can( 'manage_options' ) ) {
+            return [ 'success' => false, 'error' => 'Insufficient permissions to use GitHub Chat' ];
+          }
+          
           if ( ! defined( 'GEMINI_AI_TOOLKIT_PATH' ) ) {
               return ['success' => false, 'error' => 'AI Toolkit path not defined.'];
           }
@@ -1083,7 +1270,53 @@ class Gemini_MCP_Tools_MCP {
     catch ( Exception $e ) {
       return [ 'success' => false, 'error' => $e->getMessage() ];
     }
-
+    
     return $result;
+  }
+
+  /**
+   * Security verification for tool execution
+   */
+  private function verify_security( $tool, $args ) {
+    // Verify nonce if provided
+    if ( isset( $args['nonce'] ) ) {
+      if ( ! wp_verify_nonce( $args['nonce'], 'mcp_tool_execution' ) ) {
+        return [ 'success' => false, 'error' => 'Security verification failed' ];
+      }
+    }
+    
+    // Rate limiting
+    $user_id = get_current_user_id();
+    $transient_key = 'mcp_rate_limit_' . $user_id;
+    if ( get_transient( $transient_key ) ) {
+      return [ 'success' => false, 'error' => 'Rate limit exceeded. Please wait a few seconds.' ];
+    }
+    set_transient( $transient_key, true, 3 ); // 3 second rate limit
+    
+    // Log the tool execution for auditing
+    $this->log_tool_execution( $tool, $args, $user_id, 'started' );
+    
+    return true;
+  }
+
+  /**
+   * Audit logging for tool executions
+   */
+  private function log_tool_execution( $tool, $args, $user_id, $status, $error = '' ) {
+    if ( ! defined( 'GEMINI_MCP_LOGGING' ) || ! GEMINI_MCP_LOGGING ) {
+      return;
+    }
+    
+    $log_entry = [
+      'timestamp' => current_time( 'mysql' ),
+      'tool' => $tool,
+      'user_id' => $user_id,
+      'status' => $status,
+      'error' => $error,
+      'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+    ];
+    
+    // Log to error log for now - can be enhanced to custom table
+    error_log( 'MCP Tool Execution: ' . json_encode( $log_entry ) );
   }
 }
