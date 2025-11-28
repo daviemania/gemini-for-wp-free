@@ -29,31 +29,42 @@ jobs:
               with:
                   node-version: "20"
                   cache: "npm"
+                  cache-dependency-path: ./gemini-mcp-tools/package-lock.json
 
             - name: Install production dependencies
-              # Install dependencies *inside* the plugin directory
               run: npm ci --only=production
               working-directory: ./gemini-mcp-tools
 
             - name: Create plugin ZIP
               run: |
+                  # Define variables
                   PLUGIN_DIR="gemini-mcp-tools"
                   ZIP_NAME="${PLUGIN_DIR}-${{ github.ref_name }}.zip"
 
-                  # IMPORTANT: Zip the PLUGIN_DIR from the root.
-                  # This ensures the ZIP extracts to a single top-level 'gemini-mcp-tools' folder.
-                  zip -r $ZIP_NAME $PLUGIN_DIR \
-                    -x "$PLUGIN_DIR/vendor/freemius/*" \
-                    -x "$PLUGIN_DIR/tests/*" "$PLUGIN_DIR/test/*" "$PLUGIN_DIR/__tests__/*" \
-                    -x "$PLUGIN_DIR/.git*" "$PLUGIN_DIR/.github/*" \
-                    -x "$PLUGIN_DIR/.env*" "$PLUGIN_DIR/.env.example" \
-                    -x "$PLUGIN_DIR/freemius-gate.php~" \
-                    -x "$PLUGIN_DIR/phpunit.xml*" \
-                    -x "$PLUGIN_DIR/package-lock.json" "$PLUGIN_DIR/yarn.lock" \
-                    -x "$PLUGIN_DIR/.DS_Store" "$PLUGIN_DIR/Thumbs.db"
-                    # Node modules are included if installed, but the zip is now clean of the rest of the repo files.
+                  # Change into the plugin directory
+                  cd $PLUGIN_DIR
 
+                  # Create ZIP from inside the plugin directory
+                  # This ensures clean structure: gemini-mcp-tools/* in the ZIP
+                  zip -r ../$ZIP_NAME . \
+                    -x "vendor/freemius/*" \
+                    -x "tests/*" "test/*" "__tests__/*" \
+                    -x ".git*" ".github/*" \
+                    -x ".env*" ".env.example" \
+                    -x "freemius-gate.php~" \
+                    -x "phpunit.xml*" \
+                    -x "package-lock.json" "yarn.lock" \
+                    -x ".DS_Store" "Thumbs.db" \
+                    -x "*.log" \
+                    -x "node_modules/.cache/*"
+
+                  # Move back to root and save ZIP name
+                  cd ..
                   echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+
+                  # Verify ZIP contents (for debugging)
+                  echo "=== ZIP Contents Preview ==="
+                  unzip -l $ZIP_NAME | head -20
               shell: bash
 
             - name: Upload ZIP Artifact
