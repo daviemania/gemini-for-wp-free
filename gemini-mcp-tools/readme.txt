@@ -3,13 +3,14 @@ Contributors: daviemania
 Tags: mcp, ai, freemius, gemini, wordpress, ollama, exa, openrouter
 Requires at least: 6.0
 Tested up to: 6.6
-Stable tag: 1.0.7
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Freemium MCP tools for AI Engine WP plugin. 37 free WP CRUD tools; premium Ollama/OpenRouter/Exa/smart-folder ($29/mo Freemius Plan 36767).
 
 == Description ==
+
 Unlock the full potential of your WordPress site with **Gemini MCP Tools**, a powerful plugin that seamlessly integrates with AI Engine WP via its Media Control Protocol (MCP). This plugin empowers developers and content creators with an extensive suite of tools for dynamic WordPress management and cutting-edge AI capabilities.
 
 **Key Features:**
@@ -33,67 +34,149 @@ Unlock the full potential of your WordPress site with **Gemini MCP Tools**, a po
 
 **Requirements:**
 
-*   AI Engine WP plugin must be installed and active for MCP endpoint functionality.
-
-Empower your WordPress site with intelligence and efficiency. Upgrade to Premium for the full suite of AI capabilities!
+*   WordPress 6.0+
+*   PHP 7.4+
+*   AI Engine WP plugin (for MCP endpoint functionality)
+*   **Gemini AI Toolkit** (required for premium features - see Installation section)
+*   Node.js 18+ (for AI Toolkit features)
 
 == Installation ==
-1. Upload ZIP to WP Admin → Plugins → Add New.
-2. Activate.
-3. Connect Freemius (dev mode instant if constants set).
-4. License key from Freemius dashboard.
-5. Test: npm run chatwmcp (free ok, premium upgrade prompt).
 
-Dev Mode (wp-config.php):
-```
+**Step 1: Install the Plugin**
+
+1. Upload the plugin ZIP to WP Admin → Plugins → Add New → Upload Plugin.
+2. Click "Install Now" and then "Activate Plugin".
+3. Connect with Freemius when prompted (or skip for free features only).
+
+**Step 2: Install Required Gemini AI Toolkit**
+
+⚠️ **IMPORTANT:** Premium AI features require the separate Gemini AI Toolkit to be installed.
+
+1. Open your terminal/command prompt
+2. Navigate to your WordPress content directory:
+   ```
+   cd /path/to/wordpress/wp-content/
+   ```
+3. Clone the toolkit (must be named `gemini-ai-toolkit`):
+   ```
+   git clone https://github.com/daviemania/gemini-for-wp-free.git gemini-ai-toolkit
+   ```
+4. Install toolkit dependencies:
+   ```
+   cd gemini-ai-toolkit
+   npm install
+   ```
+5. Verify installation: The toolkit must be located at `wp-content/gemini-ai-toolkit/`
+
+**Step 3: Activate Premium Features (Optional)**
+
+1. Purchase a license from your Freemius dashboard
+2. Enter your license key in the plugin settings
+3. Premium AI tools will now be available
+
+**Developer Mode (Optional - wp-config.php):**
+
+```php
 define( 'WP_FS__DEV_MODE', true );
 define( 'WP_FS__SKIP_EMAIL_ACTIVATION', true );
 define( 'WP_FS__gemini-for-wp_SECRET_KEY', 'your_secret_key' );
 ```
 
-== Gemini AI Toolkit Setup ==
-For premium AI features (Ollama, Exa, OpenRouter, Smart Folder Manager, Composed Exploring Dolphin, Claude Code, GitHub Chat) to function, you need to install the **Gemini AI Toolkit**.
+== Gemini AI Toolkit Details ==
 
-**1. Obtain the Toolkit:**
-   The Gemini AI Toolkit is available as a separate repository. Clone or download the toolkit repository to your local development environment.
+The Gemini AI Toolkit is a companion Node.js application that powers the premium AI features of this plugin.
 
-**2. Toolkit Installation Location:**
-   Place the contents of the Gemini AI Toolkit into the following directory within your WordPress installation:
-   `wp-content/gemini-ai-toolkit/`
-   Ensure that the Node.js scripts (e.g., `ollama-manager.js`, `exa-tools.js`, `chat-openrouter.mjs`, `smart-folder-manager/cli.js`, `composed_exploring_dolphin.js`, `chat-github.js`) are directly accessible within this directory or its subdirectories as expected by the plugin.
+**Toolkit Location:**
+The toolkit must be installed at: `wp-content/gemini-ai-toolkit/`
 
-**3. Server Requirements:**
-   Your WordPress hosting environment must have **Node.js** installed for the AI Toolkit's JavaScript-based tools to execute correctly.
+**What It Provides:**
+*   Ollama integration for local AI models
+*   Exa search capabilities
+*   OpenRouter API access
+*   Smart folder organization
+*   Advanced automation scripts
+*   Claude Code integration
+*   GitHub Chat functionality
+
+**Server Requirements:**
+*   Node.js 18 or higher
+*   npm or yarn package manager
+*   Git (for installation)
+
+**Troubleshooting:**
+If you see a "Required Toolkit Missing" error in WordPress admin after activating the plugin, ensure:
+1. The toolkit is cloned to the correct location
+2. The folder is named exactly `gemini-ai-toolkit`
+3. You've run `npm install` inside the toolkit directory
+4. Your server has Node.js installed
 
 == Frequently Asked Questions ==
-= How does gating work? =
-mwai_mcp_callback filter checks $gfw_fs()->is_premium() – free direct, premium WP_Error + Freemius upgrade.
 
-= CLI Premium? =
-package.json gates ollamachat/openrouterchat/organize:smart via check-license.js (FREEMIUM_LICENSE env).
+= Do I need the AI Toolkit for free features? =
+
+No, the 37 free WordPress CRUD MCP tools work without the toolkit. The toolkit is only required for premium AI features (Ollama, Exa, OpenRouter, Smart Folder, etc.).
+
+= How does premium gating work? =
+
+The `mwai_mcp_callback` filter checks `$gfw_fs()->is_premium()`. Free features work directly, while premium features return a `WP_Error` with a Freemius upgrade URL if no active license is detected.
+
+= Can I use premium features from CLI? =
+
+Yes, `package.json` scripts gate `ollamachat`, `openrouterchat`, and `organize:smart` via `check-license.js` (requires `FREEMIUM_LICENSE` environment variable).
+
+= What if I can't install Git or Node.js? =
+
+Unfortunately, premium AI features require Node.js on your server. Consider using a hosting provider that supports Node.js, or contact your hosting support to have it installed.
+
+= Where do I get support? =
+
+For free features, use the WordPress.org support forums. Premium license holders can access priority support through their Freemius dashboard.
+
+= Why is the toolkit a separate installation? =
+
+Separating the Node.js toolkit from the WordPress plugin allows for:
+*   Easier updates and version management
+*   Better code organization
+*   Flexibility for developers who may want to customize the toolkit
+*   Compliance with WordPress.org plugin directory requirements
 
 == Screenshots ==
+
 1. Freemius Connect/License UI
-2. Premium tool blocked (upgrade nudge)
-3. Free MCP success
+2. Premium tool blocked with upgrade prompt
+3. Free MCP tool success response
+4. Toolkit missing error notice with installation instructions
 
 == Changelog ==
-= 1.0.7 =
-*   **Feature:** Integrated Freemius WordPress SDK to manage premium features and licensing.
-*   **Fix:** Removed unnecessary local development files and folders from the repository to streamline the distribution.
-*   **Enhancement:** Improved `readme.txt` description for clarity and feature highlights.
-*   **Update:** Plugin version synchronized to 1.0.7, author details updated.
-
-= 1.0.3 =
-* Fatal fix (test ZIP SDK incl.; prod Freemius inject)
-* readme.txt WP.org standard
-* Premium gating enforced (ollama_chat/exa_search/openrouter_call/smart_folder_organize)
 
 = 1.0.2 =
-* CHANGELOG v1.0.3 prep
+*   **Enhancement:** Improved installation documentation for Gemini AI Toolkit
+*   **Enhancement:** Added comprehensive admin notices for missing toolkit
+*   **Enhancement:** Added toolkit dependency checks on plugin activation
+*   **Update:** Refined README.txt with clearer installation steps
+*   **Fix:** Improved error messaging for missing dependencies
 
-See CHANGELOG.md full history.
+= 1.0.0 =
+*   Fatal fix (test ZIP SDK inclusion; production Freemius injection)
+*   readme.txt WordPress.org standard format
+*   Premium gating enforced (ollama_chat/exa_search/openrouter_call/smart_folder_organize)
+
+= 1.0.0 =
+*   **Feature:** Integrated Freemius WordPress SDK to manage premium features and licensing
+*   **Fix:** Removed unnecessary local development files and folders from repository
+*   **Enhancement:** Improved readme.txt description for clarity and feature highlights
+*   **Update:** Plugin version synchronized to 1.0.7, author details updated
+
+See CHANGELOG.md for full version history.
 
 == Upgrade Notice ==
-= 1.0.7 =
-This release includes the official Freemius WordPress SDK, enabling robust premium feature gating and streamlined licensing. Several unnecessary development files have been removed from the distribution for a cleaner package. Please ensure your AI Engine WP plugin is up to date for optimal compatibility.
+
+= 1.0.2 =
+This version includes improved installation documentation and better error handling for the required Gemini AI Toolkit dependency. If you're upgrading from an earlier version, please ensure the toolkit is properly installed at wp-content/gemini-ai-toolkit/.
+
+== Additional Resources ==
+
+*   **Toolkit Repository:** https://github.com/daviemania/gemini-for-wp-free
+*   **Installation Guide:** See Installation section above
+*   **Author Website:** https://maniainc.com
+*   **Support:** WordPress.org forums (free) or Freemius dashboard (premium)
