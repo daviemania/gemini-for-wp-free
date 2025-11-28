@@ -25,7 +25,7 @@ if (!function_exists("gfw_fs")) {
                 define("WP_FS__PRODUCT_22000_MULTISITE", true);
             }
             // Include Freemius SDK.
-            require_once dirname(__FILE__) . "/vendor/freemius/start.php";
+            require_once dirname(__FILE__) . "/vendor/start.php";
             $gfw_fs = fs_dynamic_init([
                 "id" => "22000",
                 "slug" => "gemini-for-wp",
