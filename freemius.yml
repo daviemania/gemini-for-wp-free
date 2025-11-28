@@ -1,0 +1,82 @@
+# Freemius CLI Configuration for Gemini MCP Tools plugin
+
+id: 22000
+slug: gemini-for-wp
+type: plugin
+public_key: pk_d2f0b07deef9f60a6a8400169b555
+main_file: gemini-mcp-tools/gemini-mcp-tools.php
+
+# Folders and files to exclude when building the plugin .zip for distribution
+folders_to_exclude:
+  - .git/
+  - .github/
+  - .vscode/
+  - .env.example
+  - node_modules/
+  - projects/
+  - setups/
+  - tasks/
+  - tmp/
+  - logs/
+  - vendor/*  # Exclude the root vendor if it's for the main repo, not plugin specific
+  - !gemini-mcp-tools/vendor/ # Explicitly include the plugin's vendor directory
+  - package.json
+  - package-lock.json
+  - composer.json
+  - composer.lock
+  - Dockerfile
+  - docker-compose.yml
+  - .gitlab-ci.yml
+  - README.md
+  - LICENSE
+  - CHANGELOG.md
+  - WIKI.md
+  - acknowledge.md
+  - ai_engine_mcp_functions.md
+  - ai_engine_plugin_overview.md
+  - ai-manager-hybrid.js
+  - backup-now.js
+  - backup-scheduler.js
+  - backup-service.js
+  - chat_history_1.md
+  - chat-github.js
+  - chat-ollama.js
+  - chat-openrouter.mjs
+  - chat-with-mcp.js
+  - chat.js
+  - check-license.js
+  - create_new_post.php
+  - dprint.json
+  - ecosystem.config.js
+  - exa-tools.js
+  - format_post_content.py
+  - functionality-freemium.md
+  - gemini-cli-enhancements.md
+  - gemini-cli-legacy.js
+  - gemini-cli.js
+  - get_post_content.php
+  - get_posts.php
+  - get_wp_posts.php
+  - get-docker.sh
+  - github-chat.prompt.yml
+  - GUIDANCE_INDEX.md
+  - mcp.js
+  - nodemon.json
+  - ollama-manager.js
+  - privacy-policy.md
+  - propose_post_update.php
+  - renovate.json
+  - server.js
+  - terms-and-conditions.md
+  - update_post_content.php
+  - wordpress_mcp_functions.md
+  - wp-cli-usage.md
+  - .claude/
+  - .devcontainer/
+  - .venv/
+  - .well-known/
+  - .zed/
+  - agents/
+  - data/
+  - docs/
+  - smart-folder-manager/
