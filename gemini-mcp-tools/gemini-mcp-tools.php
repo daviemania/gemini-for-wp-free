@@ -36,8 +36,7 @@ if (!function_exists("gfw_fs")) {
                 "has_premium_version" => true,
                 "has_addons" => false,
                 "has_paid_plans" => true,
-                "wp_org_gatekeeper" =>
-                    'OA7#BoRiBNqdf52FvzEf!!074aRLPs8fspif$7K1#4u4Csys1fQlCecVcUTOs2mcpeVHi#C2j9d09fOTvbC0HloPT7fFee5WdS3G',
+                "wp_org_gatekeeper" => 'OA7#BoRiBNqdf52FvzEf!!074aRLPs8fspif$7K1#4u4Csys1fQlCecVcUTOs2mcpeVHi#C2j9d09fOTvbC0HloPT7fFee5WdS3G',
                 "trial" => [
                     "days" => 3,
                     "is_require_payment" => true,
@@ -83,18 +82,14 @@ function gemini_mcp_check_toolkit()
                 <h4>Quick Installation:</h4>
                 <ol style="margin-left: 20px;">
                     <li>Open terminal/command prompt</li>
-                    <li>Navigate to: <code><?php echo esc_html(
-                        ABSPATH . "wp-content/",
-                    ); ?></code></li>
+                    <li>Navigate to: <code><?php echo esc_html(ABSPATH . "wp-content/"); ?></code></li>
                     <li>Run: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">git clone https://github.com/daviemania/gemini-for-wp-free.git gemini-ai-toolkit</code></li>
                     <li>Then: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">cd gemini-ai-toolkit && npm install</code></li>
                     <li>Refresh this page</li>
                 </ol>
 
                 <p style="padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107;">
-                    <strong>Note:</strong> The toolkit must be installed at: <code><?php echo esc_html(
-                        $toolkit_path,
-                    ); ?></code>
+                    <strong>Note:</strong> The toolkit must be installed at: <code><?php echo esc_html($toolkit_path); ?></code>
                 </p>
 
                 <p><a href="https://github.com/daviemania/gemini-for-wp-free#installation" target="_blank" class="button button-secondary">View Full Installation Guide →</a></p>
@@ -113,9 +108,7 @@ function gemini_mcp_check_toolkit()
             <div class="notice notice-warning">
                 <h3>⚠️ Gemini MCP Tools: Incomplete Toolkit Installation</h3>
                 <p>The toolkit is installed but dependencies are missing.</p>
-                <p>Please run: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">cd <?php echo esc_html(
-                    $toolkit_path,
-                ); ?> && npm install</code></p>
+                <p>Please run: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">cd <?php echo esc_html($toolkit_path); ?> && npm install</code></p>
             </div>
             <?php
         });
@@ -128,25 +121,34 @@ function gemini_mcp_check_toolkit()
 // Security: Add capability checks and nonce verification
 function gemini_mcp_verify_security($tool, $args)
 {
-    // Verify nonce if provided
+    // 1. Verify user authentication
+    if (!is_user_logged_in()) {
+         return [
+            "success" => false,
+            "error" => "Authentication required.",
+        ];
+    }
+
+    // 2. Verify nonce if provided (Optional based on implementation)
     if (isset($args["nonce"])) {
         if (!wp_verify_nonce($args["nonce"], "mcp_tool_execution")) {
             return [
                 "success" => false,
-                "error" => "Security verification failed",
+                "error" => "Security verification failed (Invalid Nonce).",
             ];
         }
     }
 
-    // Rate limiting
-    $transient_key = "mcp_rate_limit_" . get_current_user_id();
+    // 3. Rate limiting
+    $current_user_id = get_current_user_id();
+    $transient_key = "mcp_rate_limit_" . $current_user_id;
     if (get_transient($transient_key)) {
         return [
             "success" => false,
             "error" => "Rate limit exceeded. Please wait a few seconds.",
         ];
     }
-    set_transient($transient_key, true, 3); // 3 second rate limit
+    set_transient($transient_key, true, 2); // 2 second rate limit
 
     return true;
 }

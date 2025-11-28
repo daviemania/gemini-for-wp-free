@@ -39,14 +39,18 @@ function freemius_gate_mcp_call($result, $tool, $args, $id)
 
     // Check if this is a premium tool and user doesn't have premium
     if (in_array($tool, $premium_tools) && !$gfw_fs->is_premium()) {
+
+        // Return strict JSON-RPC 2.0 Error
         return [
-            "success" => false,
-            "error" =>
-                "Premium license required for " .
-                $tool .
-                ". Upgrade: " .
-                $gfw_fs->get_upgrade_url(),
-            "premium_required" => true,
+            "jsonrpc" => "2.0",
+            "error"   => [
+                "code"    => -32001, // Server error / Access Denied
+                "message" => "Premium license required for tool: " . $tool,
+                "data"    => [
+                    "upgrade_url" => $gfw_fs->get_upgrade_url()
+                ]
+            ],
+            "id"      => $id
         ];
     }
 
@@ -54,4 +58,5 @@ function freemius_gate_mcp_call($result, $tool, $args, $id)
 }
 
 // Hook to MCP endpoint with proper parameters
+// Priority 5 ensures this runs BEFORE the main handler (priority 10)
 add_filter("mwai_mcp_callback", "freemius_gate_mcp_call", 5, 4);
