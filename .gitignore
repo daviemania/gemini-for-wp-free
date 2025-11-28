@@ -91,7 +91,7 @@ tasks/  # All (geekline/mcp-verification)
  data/
  .genkit/
  .github/chat_log
- chat_history_1/
+ chat_history_1.md
  wordpress_health_review/
  betterlinks_db_fix*
  adk_agent_list/
