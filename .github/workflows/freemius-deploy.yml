@@ -1,77 +1,80 @@
 name: Freemius Plugin Deploy
 
 on:
-  push:
-    tags:
-      - 'v*'
-  workflow_dispatch:
+    push:
+        tags:
+            - "v*"
+    workflow_dispatch:
 
 jobs:
-  build-zip:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    build-zip:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            pull-requests: write
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-      - name: Run Gitleaks Secret Scan
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: false
+            - name: Run Gitleaks Secret Scan
+              uses: gitleaks/gitleaks-action@v2
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              continue-on-error: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
 
-      - name: Install production dependencies
-        run: npm ci --only=production
-        working-directory: ./gemini-mcp-tools
+            - name: Install production dependencies
+              # Install dependencies *inside* the plugin directory
+              run: npm ci --only=production
+              working-directory: ./gemini-mcp-tools
 
-      - name: Create plugin ZIP
-        run: |
-          cd gemini-mcp-tools
-          ZIP_NAME="gemini-mcp-tools-${{ github.ref_name }}.zip"
-          
-          # Create ZIP with node_modules included
-          zip -r ../$ZIP_NAME . \
-            -x '**/vendor/freemius/*' \
-            -x '**/tests/*' '**/test/*' '**/__tests__/*' \
-            -x '**/.git*' '**/.github/*' \
-            -x '**/.env*' '**/.env.example' \
-            -x '**/freemius-gate.php~' \
-            -x '**/phpunit.xml*' \
-            -x '**/package-lock.json' '**/yarn.lock' \
-            -x '**/.DS_Store' '**/Thumbs.db'
-          
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-        shell: bash
+            - name: Create plugin ZIP
+              run: |
+                  PLUGIN_DIR="gemini-mcp-tools"
+                  ZIP_NAME="${PLUGIN_DIR}-${{ github.ref_name }}.zip"
 
-      - name: Upload ZIP Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: gemini-mcp-tools-plugin-${{ github.ref_name }}
-          path: ${{ env.ZIP_NAME }}
-          retention-days: 30
+                  # IMPORTANT: Zip the PLUGIN_DIR from the root.
+                  # This ensures the ZIP extracts to a single top-level 'gemini-mcp-tools' folder.
+                  zip -r $ZIP_NAME $PLUGIN_DIR \
+                    -x "$PLUGIN_DIR/vendor/freemius/*" \
+                    -x "$PLUGIN_DIR/tests/*" "$PLUGIN_DIR/test/*" "$PLUGIN_DIR/__tests__/*" \
+                    -x "$PLUGIN_DIR/.git*" "$PLUGIN_DIR/.github/*" \
+                    -x "$PLUGIN_DIR/.env*" "$PLUGIN_DIR/.env.example" \
+                    -x "$PLUGIN_DIR/freemius-gate.php~" \
+                    -x "$PLUGIN_DIR/phpunit.xml*" \
+                    -x "$PLUGIN_DIR/package-lock.json" "$PLUGIN_DIR/yarn.lock" \
+                    -x "$PLUGIN_DIR/.DS_Store" "$PLUGIN_DIR/Thumbs.db"
+                    # Node modules are included if installed, but the zip is now clean of the rest of the repo files.
 
-  deploy:
-    needs: build-zip
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download ZIP
-        uses: actions/download-artifact@v4
-        with:
-          name: gemini-mcp-tools-plugin-${{ github.ref_name }}
-          path: ./artifacts
-      
-      - name: Deploy to Freemius
-        uses: buttonizer/freemius-deploy@v0.1.3
-        with:
-          freemius-api-token: ${{ secrets.FREEMIUS_API_TOKEN }}
-          plugin-zip: ./artifacts/gemini-mcp-tools-${{ github.ref_name }}.zip
+                  echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+              shell: bash
+
+            - name: Upload ZIP Artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: gemini-mcp-tools-plugin-${{ github.ref_name }}
+                  path: ${{ env.ZIP_NAME }}
+                  retention-days: 30
+
+    deploy:
+        needs: build-zip
+        runs-on: ubuntu-latest
+        steps:
+            - name: Download ZIP
+              uses: actions/download-artifact@v4
+              with:
+                  name: gemini-mcp-tools-plugin-${{ github.ref_name }}
+                  path: ./artifacts
+
+            - name: Deploy to Freemius
+              uses: buttonizer/freemius-deploy@v0.1.3
+              with:
+                  freemius-api-token: ${{ secrets.FREEMIUS_API_TOKEN }}
+                  plugin-zip: ./artifacts/gemini-mcp-tools-${{ github.ref_name }}.zip
