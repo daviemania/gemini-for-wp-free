@@ -97,7 +97,6 @@ tasks/  # All (geekline/mcp-verification)
  adk_agent_list/
  .gemini_security/
  projects/tool-creator-enhancer/
- .github
  .nvmrc
  adk_agent_list.json
  chat_log.txt
