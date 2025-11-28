@@ -32,5 +32,3 @@ Contributions are welcome! Please follow the existing code conventions and submi
 ## License
 
 See the `LICENSE` file for details.
-
-This is a minor update for repository maintenance.
