@@ -1115,5 +1115,4 @@ class Gemini_MCP_Tools_MCP {
     }
 
     return $result;
-  }
-}
+    }
