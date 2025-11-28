@@ -104,7 +104,7 @@ Interaction with the WordPress site is primarily handled through the Gemini CLI 
 - `tasks/`: Tracks current and completed tasks.
 - `gemini-for-wp/`: Contains the WordPress plugin code.
 
-Created by @daviemania – WP blogger, musician, YouTuber, upcoming musician. I Created this tool for my own multisite WordPress workflow at Mania Africa, but saw its utility for all WP users... and its been contributed to majorly by numerous AI tools and LLMs.
+Created by [@daviemania](https://github.com/daviemania)– WP blogger, musician, YouTuber, upcoming musician. I Created this tool for my own multisite WordPress workflow at Mania Africa, but saw its utility for all WP users... and its been contributed to majorly by numerous AI tools and LLMs.
 
 - Site: [maniainc.com](https://maniainc.com)
 - [linktr.ee/davidmania](https://linktr.ee/davidmania)
