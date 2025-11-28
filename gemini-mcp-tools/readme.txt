@@ -20,13 +20,16 @@ Unlock the full potential of your WordPress site with **Gemini MCP Tools**, a po
     *   `exa_search`: Perform intelligent, context-aware web searches.
     *   `openrouter_call`: Access various AI models through the OpenRouter API.
     *   `smart_folder_organize`: Automate content organization with AI-driven smart folders.
+    *   `composed_exploring_dolphin`: Executes advanced automation scripts.
+    *   `claude_code`: Performs code-related tasks using Anthropic's Claude AI.
+    *   `github_chat`: Initiates AI-powered chat integrated with GitHub for code assistance.
 
 **Seamless Integration & Security:**
 
 *   Designed for robust integration with AI Engine WP, utilizing its MCP endpoint for secure and efficient communication.
 *   **Freemius Integration (40/60 Model):**
     *   **Free Tier:** Enjoy full access to all 37 WordPress CRUD MCP tools.
-    *   **Premium Tier:** Access advanced AI features (ollama_chat, exa_search, openrouter_call, smart_folder_organize) with a valid Freemius license. Premium features are intelligently gated, returning a `WP_Error` with an upgrade URL if a license is not active, ensuring a smooth upgrade path.
+    *   **Premium Tier:** Access advanced AI features (ollama_chat, exa_search, openrouter_call, smart_folder_organize, composed_exploring_dolphin, claude_code, github_chat) with a valid Freemius license. Premium features are intelligently gated, returning a `WP_Error` with an upgrade URL if a license is not active, ensuring a smooth upgrade path.
 
 **Requirements:**
 
@@ -48,9 +51,23 @@ define( 'WP_FS__SKIP_EMAIL_ACTIVATION', true );
 define( 'WP_FS__gemini-for-wp_SECRET_KEY', 'your_secret_key' );
 ```
 
+== Gemini AI Toolkit Setup ==
+For premium AI features (Ollama, Exa, OpenRouter, Smart Folder Manager, Composed Exploring Dolphin, Claude Code, GitHub Chat) to function, you need to install the **Gemini AI Toolkit**.
+
+**1. Obtain the Toolkit:**
+   The Gemini AI Toolkit is available as a separate repository. Clone or download the toolkit repository to your local development environment.
+
+**2. Toolkit Installation Location:**
+   Place the contents of the Gemini AI Toolkit into the following directory within your WordPress installation:
+   `wp-content/gemini-ai-toolkit/`
+   Ensure that the Node.js scripts (e.g., `ollama-manager.js`, `exa-tools.js`, `chat-openrouter.mjs`, `smart-folder-manager/cli.js`, `composed_exploring_dolphin.js`, `chat-github.js`) are directly accessible within this directory or its subdirectories as expected by the plugin.
+
+**3. Server Requirements:**
+   Your WordPress hosting environment must have **Node.js** installed for the AI Toolkit's JavaScript-based tools to execute correctly.
+
 == Frequently Asked Questions ==
 = How does gating work? =
-pre_mcp_call filter checks $gfw_fs()->is_premium() – free direct, premium WP_Error + Freemius upgrade.
+mwai_mcp_callback filter checks $gfw_fs()->is_premium() – free direct, premium WP_Error + Freemius upgrade.
 
 = CLI Premium? =
 package.json gates ollamachat/openrouterchat/organize:smart via check-license.js (FREEMIUM_LICENSE env).
