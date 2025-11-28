@@ -42,6 +42,8 @@
         "organize:clean": "node smart-folder-manager/cli.js clean",
         "organize:analyze": "node smart-folder-manager/cli.js analyze --detailed",
         "organize:interactive": "node check-license.js organize:interactive && node smart-folder-manager/cli.js",
-        "claude:code": "node check-license.js claude:code && npx claude code"
+        "claude:code": "node check-license.js claude:code && npx claude code",
+        "exasearch": "node check-license.js exasearch && node exa-tools.js search",
+        "dolphin": "node check-license.js dolphin && node composed_exploring_dolphin.js"
     }
 }
