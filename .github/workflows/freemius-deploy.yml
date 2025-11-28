@@ -60,19 +60,18 @@ jobs:
           path: ${{ env.ZIP_NAME }}
           retention-days: 30
 
-  # Uncomment when ready to deploy to Freemius
-  # deploy:
-  #   needs: build-zip
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Download ZIP
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: gemini-mcp-tools-plugin-${{ github.ref_name }}
-  #         path: ./artifacts
-  #     
-  #     - name: Deploy to Freemius
-  #       uses: buttonizer/freemius-deploy@v0.1.3
-  #       with:
-  #         freemius-api-token: ${{ secrets.FREEMIUS_API_TOKEN }}
-  #         plugin-zip: ./artifacts/gemini-mcp-tools-${{ github.ref_name }}.zip
+  deploy:
+    needs: build-zip
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download ZIP
+        uses: actions/download-artifact@v4
+        with:
+          name: gemini-mcp-tools-plugin-${{ github.ref_name }}
+          path: ./artifacts
+      
+      - name: Deploy to Freemius
+        uses: buttonizer/freemius-deploy@v0.1.3
+        with:
+          freemius-api-token: ${{ secrets.FREEMIUS_API_TOKEN }}
+          plugin-zip: ./artifacts/gemini-mcp-tools-${{ github.ref_name }}.zip
