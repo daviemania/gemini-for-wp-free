@@ -627,6 +627,13 @@ class Gemini_MCP_Tools_MCP {
   }
   
   public function handle_tool_execution( $result, $tool, $args, $id ) {
+      
+      // Security verification
+    $security_check = gemini_mcp_verify_security( $tool, $args );
+    if ( $security_check !== true ) {
+        return $security_check;
+    }
+      
     if ( strpos( $tool, 'wp_' ) !== 0 && strpos( $tool, 'mwai_' ) !== 0 ) {
       return $result;
     }
