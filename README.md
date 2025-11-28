@@ -1,10 +1,10 @@
 # Gemini for WordPress (Beta)
 
-A CLI-based environment for interacting with and managing a WordPress site using AI-powered tools and a custom Media Control Protocol (MCP).
+A CLI-based environment for interacting with and managing a WordPress site using AI-powered tools and a custom Model Context Protocol (MCP).
 
 ## Overview
 
-This project provides a powerful command-line interface to manage a complex, multisite WordPress installation. It leverages a custom set of 37 Media Control Protocol (MCP) functions to interact with various aspects of WordPress, from content and user management to site options and media.
+This project provides a powerful command-line interface to manage a complex, multisite WordPress installation. It leverages a custom set of 37 Model Context Protocol (MCP) functions to interact with various aspects of WordPress, from content and user management to site options and media.
 
 The environment is designed for developers and administrators to perform complex tasks, automate workflows, and assist with content creation and site maintenance through AI-powered features.
 
@@ -102,7 +102,7 @@ Interaction with the WordPress site is primarily handled through the Gemini CLI 
 - `projects/`: Contains documentation for sub-projects like the AI Editor and AI Developer Assistant.
 - `setups/`: Contains setup guides for the development environment.
 - `tasks/`: Tracks current and completed tasks.
-- `gemini-for-wp/`: Contains the WordPress plugin code.
+- `gemini-mcp-tools/`: Contains the WordPress plugin code.
 
 Created by [@daviemania](https://github.com/daviemania)– WP blogger, musician, YouTuber, upcoming musician. I Created this tool for my own multisite WordPress workflow at Mania Africa, but saw its utility for all WP users... and its been contributed to majorly by numerous AI tools and LLMs.
 

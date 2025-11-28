@@ -5,7 +5,7 @@ This document outlines the 37 Media Control Protocol (MCP) functions available f
 ## API Endpoint and Authentication
 
 *   **REST API Endpoint:** `/wp-json/mcp/v1/sse`
-*   **Authentication:** Bearer Token `uX484&B$k@c@6072&VdTJi#3`
+*   **Authentication:** Bearer Token `${WP_MCP_TOKEN}`
 
 ## Request Format
 
