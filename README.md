@@ -102,7 +102,7 @@ Interaction with the WordPress site is primarily handled through the Gemini CLI 
 - `projects/`: Contains documentation for sub-projects like the AI Editor and AI Developer Assistant.
 - `setups/`: Contains setup guides for the development environment.
 - `tasks/`: Tracks current and completed tasks.
-- `gemini-for-wp/`: Contains the WordPress plugin code.
+- `gemini-mcp-tools/`: Contains the WordPress plugin code.
 
 Created by [@daviemania](https://github.com/daviemania)– WP blogger, musician, YouTuber, upcoming musician. I Created this tool for my own multisite WordPress workflow at Mania Africa, but saw its utility for all WP users... and its been contributed to majorly by numerous AI tools and LLMs.
 
