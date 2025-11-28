@@ -26,85 +26,112 @@ The environment is designed for developers and administrators to perform complex
 - **Caching:** Redis, Varnish, Nginx fastcgi_cache
 - **Development:** VS Code Dev Containers, Docker
 
-## Environment Setup
+## Installation
 
-Copy `.env.example` to `.env` and fill in your values:
+**This toolkit is a companion to the [Gemini MCP Tools](link-to-plugin) WordPress plugin.**
 
-```bash
+### Quick Install
+
+\`\`\`bash
+cd /path/to/wordpress/wp-content/
+git clone https://github.com/daviemania/gemini-for-wp-free.git gemini-ai-toolkit
+cd gemini-ai-toolkit
+npm install
+\`\`\`
+
+⚠️ **Important:** The folder must be named \`gemini-ai-toolkit\` when cloning.
+
+### Manual Install
+
+1. Download this repository
+2. Rename the folder to \`gemini-ai-toolkit\`
+3. Place it in \`/wp-content/gemini-ai-toolkit/\`
+4. Run \`npm install\` inside the directory
+
+### Development Container Setup
+
+1. **Clone the repository.**
+2. **Rebuild the Dev Container:** Open the project in VS Code. You will be prompted to "Reopen in Container". This will build the Docker container defined in \`.devcontainer/devcontainer.json\`, which includes all necessary dependencies.
+3. **Install Dependencies:**
+    - The Node.js dependencies should be installed automatically. If not, run:
+      \`\`\`bash
+      npm install
+      \`\`\`
+    - The Python dependencies can be installed via:
+      \`\`\`bash
+      pip install -r requirements.txt
+      \`\`\`
+
+## Environment Configuration
+
+Copy \`.env.example\` to \`.env\` and fill in your values:
+
+\`\`\`bash
 cp .env.example .env
 # Edit .env with your keys (git-ignored)
-```
+\`\`\`
 
-**Required Vars:**
-- `WP_MCP_TOKEN`: WordPress MCP Bearer token
-- `GEMINI_API_KEY`: Google Gemini API
-- `GITHUB_TOKEN`: GitHub PAT (for MCP)
-- `EXA_API_KEY`: Exa AI search (optional)
+**Required Environment Variables:**
+- \`WP_MCP_TOKEN\`: WordPress MCP Bearer token
+- \`GEMINI_API_KEY\`: Google Gemini API
+- \`GITHUB_TOKEN\`: GitHub PAT (for MCP)
+- \`EXA_API_KEY\`: Exa AI search (optional)
 
-**Security Note:** `.env` is git-ignored. Never commit secrets!
+**Security Note:** \`.env\` is git-ignored. Never commit secrets!
 
-## Getting Started
+## Requirements
 
-### Prerequisites
-
-- Docker
-- VS Code with the "Dev Containers" extension
+- Node.js 18+
+- npm or yarn
+- WordPress site with Gemini MCP Tools plugin
+- Docker (for development container)
+- VS Code with the "Dev Containers" extension (recommended)
 - An SSH agent configured on your host machine
 
-### Installation
-
-1.  **Clone the repository.**
-2.  **Rebuild the Dev Container:** Open the project in VS Code. You will be prompted to "Reopen in Container". This will build the Docker container defined in `.devcontainer/devcontainer.json`, which includes all necessary dependencies.
-3.  **Install Dependencies:**
-    - The Node.js dependencies should be installed automatically. If not, run:
-      ```bash
-      npm install
-      ```
-    - The Python dependencies can be installed via:
-      ```bash
-      pip install -r requirements.txt
-      ```
-
-## Exa AI Integration
-
-**New: Semantic Web Search with Exa AI** (enabled via `EXA_API_KEY`)
-
-- **Tools Available:**
-  - `exa_search`: Neural/keyword web search with categories (news, github, papers), date filters.
-  - `exa_find_similar`: Find pages similar to a URL.
-  - `exa_get_contents`: Fetch full text, highlights, summaries for result IDs.
-
-- **Usage in Gemini Chat (`npm run chatwmcp`):**
-  ```
-  💬 You: Search Exa for "latest Claude AI features" (numResults:5, type:neural)
-  🔍 Calling: exa_search({"query":"latest Claude AI features","numResults":5,"type":"neural"})
-  ✓ Found 5 results
-  🤖 Gemini: Here are the top results... [AI summary + WP integration possible]
-  ```
-
-**Tested & Ready:** Returns real results (e.g., Claude Sonnet 4.5 articles from Nov 2025).
-
 ## Usage
+
+This toolkit is automatically detected and used by the Gemini MCP Tools plugin once installed in the correct location.
 
 Interaction with the WordPress site is primarily handled through the Gemini CLI and the custom MCP functions.
 
 - **MCP Functions:** A complete list of available functions, their parameters, and usage examples can be found in [wordpress_mcp_functions.md](wordpress_mcp_functions.md).
 - **Custom Scripts:** The project contains various scripts for specific tasks, such as:
-    - `get_posts.php`: Retrieve a list of posts.
-    - `propose_post_update.php`: Update a post's content.
-    - `create_new_post.php`: Create a new post.
+    - \`get_posts.php\`: Retrieve a list of posts.
+    - \`propose_post_update.php\`: Update a post's content.
+    - \`create_new_post.php\`: Create a new post.
+
+## Exa AI Integration
+
+**New: Semantic Web Search with Exa AI** (enabled via \`EXA_API_KEY\`)
+
+- **Tools Available:**
+  - \`exa_search\`: Neural/keyword web search with categories (news, github, papers), date filters.
+  - \`exa_find_similar\`: Find pages similar to a URL.
+  - \`exa_get_contents\`: Fetch full text, highlights, summaries for result IDs.
+
+- **Usage in Gemini Chat (\`npm run chatwmcp\`):**
+  \`\`\`
+  💬 You: Search Exa for "latest Claude AI features" (numResults:5, type:neural)
+  🔍 Calling: exa_search({"query":"latest Claude AI features","numResults":5,"type":"neural"})
+  ✓ Found 5 results
+  🤖 Gemini: Here are the top results... [AI summary + WP integration possible]
+  \`\`\`
+
+**Tested & Ready:** Returns real results (e.g., Claude Sonnet 4.5 articles from Nov 2025).
 
 ## Project Structure
 
-- `GEMINI.md`: The main context file for the AI, detailing the system architecture and project goals.
-- `wordpress_mcp_functions.md`: Detailed documentation for all 37 WordPress MCP functions.
-- `ai_engine_mcp_functions.md`: Documentation for the AI Engine specific functions.
-- `projects/`: Contains documentation for sub-projects like the AI Editor and AI Developer Assistant.
-- `setups/`: Contains setup guides for the development environment.
-- `tasks/`: Tracks current and completed tasks.
-- `gemini-mcp-tools/`: Contains the WordPress plugin code.
+- \`GEMINI.md\`: The main context file for the AI, detailing the system architecture and project goals.
+- \`wordpress_mcp_functions.md\`: Detailed documentation for all 37 WordPress MCP functions.
+- \`ai_engine_mcp_functions.md\`: Documentation for the AI Engine specific functions.
+- \`projects/\`: Contains documentation for sub-projects like the AI Editor and AI Developer Assistant.
+- \`setups/\`: Contains setup guides for the development environment.
+- \`tasks/\`: Tracks current and completed tasks.
+- \`gemini-mcp-tools/\`: Contains the WordPress plugin code.
 
-Created by [@daviemania](https://github.com/daviemania)– WP blogger, musician, YouTuber, upcoming musician. I Created this tool for my own multisite WordPress workflow at Mania Africa, but saw its utility for all WP users... and its been contributed to majorly by numerous AI tools and LLMs.
+---
+
+Created by [@daviemania](https://github.com/daviemania) – WP blogger, musician, YouTuber, upcoming musician. I created this tool for my own multisite WordPress workflow at Mania Africa, but saw its utility for all WP users... and it's been contributed to majorly by numerous AI tools and LLMs.
 
 - Site: [maniainc.com](https://maniainc.com)
 - [linktr.ee/davidmania](https://linktr.ee/davidmania)
