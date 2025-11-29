@@ -1,0 +1,121 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+mcp-error.log*
+mcp-out.log*
+server-error.log*
+server-out.log*
+
+# Non-free
+chat-github.js
+chat-ollama.js
+chat-openrouter.mjs
+exa-tools.js
+github-chat.prompt.yml
+ollama-manager.js
+check-license.js
+
+# PM2 Logs (new additions)
+logs/
+backup-error.log*
+backup-out.log*
+pm2-error.log*
+pm2-out.log*
+
+# Backup directories
+backups/
+.Backup
+*.backup
+.backup
+.bak/
+*.bak
+
+# PM2 runtime files
+.pm2/
+
+# Keys
+keys/
+.pem/
+*.pem
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.claude/
+wordpress
+CLAUDE.md
+GEMINI.md
+tasks/
+projects/
+tmp/
+data/
+.DS_Store
+Thumbs.db
+
+# gemini-mcp-tools/  # uncommented for release
+gemini-mcp-tools/freemius/
+.gemini/
+gha-creds-*.json
+gemini-docs
+
+# Openrouter Chat History
+.openrouter-history.json
+.openrouter-history
+core
+core.*
+core
+core.*
+core
+core.*
+
+
+# Unnecessary Personal Files
+tasks/  # All (geekline/mcp-verification)
+ projects/  # All (tool-creator-enhancer/ai-*)
+ tmp/  # All (betterlinks/post_*)
+ data/
+ .genkit/
+ .github/chat_log
+ chat_history_1.md
+ wordpress_health_review/
+ betterlinks_db_fix*
+ adk_agent_list/
+ .gemini_security/
+ projects/tool-creator-enhancer/
+ .nvmrc
+ adk_agent_list.json
+ chat_log.txt
+ gemini-project persona
+ wordpress_health_review.md
+ stack_maintenance
+ .genkit/traces_idx/
+ .gemini_security/
+ .claude/agents/settings.local.json
+ chat-with-mcp.bak
+ chat-openrouter.js.bak
+ *.zip
+ server.js.bak

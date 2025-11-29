@@ -1,0 +1,38 @@
+{
+    "name": "gemini-project",
+    "version": "1.0.0",
+    "description": "Gemini AI project with integrated smart folder management",
+    "overrides": {
+        "tmp": "^0.2.3",
+        "glob": "^11.1.0"
+    },
+    "dependencies": {
+        "@azure-rest/ai-inference": "latest",
+        "@azure/core-auth": "latest",
+        "@azure/core-sse": "latest",
+        "@google/generative-ai": "^0.24.1",
+        "chalk": "^5.6.2",
+        "express": "^5.1.0",
+        "fs-extra": "^11.3.2",
+        "inquirer": "^13.0.1",
+        "node-cron": "^4.2.1",
+        "node-fetch": "^3.3.2",
+        "npm": "^11.6.4",
+        "simple-git": "^3.30.0",
+        "commander": "^14.0.2",
+        "yaml": "^2.8.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.11"
+    },
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js",
+        "chat": "node chat.js",
+        "chatwmcp": "node chat-with-mcp.js",
+        "organize": "node smart-folder-manager/cli.js organize",
+        "organize:clean": "node smart-folder-manager/cli.js clean",
+        "organize:analyze": "node smart-folder-manager/cli.js analyze --detailed",
+        "organize:interactive": "node check-license.js organize:interactive && node smart-folder-manager/cli.js"
+    }
+}

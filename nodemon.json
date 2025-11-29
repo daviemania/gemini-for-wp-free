@@ -1,0 +1,15 @@
+{
+  "ignore": [
+    "wordpress/**/*",
+    "wp-content/**/*",
+    "wp-admin/**/*",
+    "wp-includes/**/*",
+    "node_modules/**/*",
+    ".git/**/*"
+  ],
+  "watch": [
+    "server.js",
+    "gemini-cli.js",
+    "*.js"
+  ]
+}

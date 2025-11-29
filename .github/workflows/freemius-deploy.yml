@@ -1,0 +1,166 @@
+name: Freemius Plugin Deploy
+
+on:
+  push:
+    tags:
+      - "v*"  # This already matches Freemius requirements (v1.0.0, v1.1.1, v2.2.2, etc.)
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., 1.0.9) - will create tag v1.0.9'
+        required: true
+        type: string
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Gitleaks Secret Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: false
+
+      - name: Extract version from tag or input
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            # For manual dispatch, create the tag
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git tag -a "v$VERSION" -m "Release v$VERSION"
+            git push origin "v$VERSION"
+          else
+            # Remove 'v' prefix from tag (v1.0.9 -> 1.0.9) for internal use
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Update plugin version in files
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          PLUGIN_FILE="/gemini-mcp-tools/gemini-mcp-tools.php"
+          README_FILE="/gemini-mcp-tools/readme.txt"
+          
+          echo "📝 Updating version to $VERSION in plugin files..."
+          
+          # Update main plugin file version
+          sed -i "s/^\( \* Version:\s*\).*/\1$VERSION/" "$PLUGIN_FILE"
+          
+          # Update readme.txt stable tag
+          sed -i "s/^Stable tag:.*/Stable tag: $VERSION/" "$README_FILE"
+          
+          echo "✅ Version updated in:"
+          grep "Version:" "$PLUGIN_FILE" | head -1
+          grep "Stable tag:" "$README_FILE"
+
+      - name: Create plugin ZIP
+        run: |
+          # Define variables
+          PLUGIN_DIR="/gemini-mcp-tools"
+          ZIP_NAME="gemini-mcp-tools-v${{ steps.get_version.outputs.VERSION }}.zip"
+          
+          echo "📦 Creating ZIP from: $PLUGIN_DIR"
+          echo "📁 ZIP filename: $ZIP_NAME"
+          
+          # Change into the gemini-project directory to maintain proper structure
+          cd gemini-project
+          
+          # Create production ZIP - this will create gemini-mcp-tools/ structure in ZIP
+          zip -r ../$ZIP_NAME gemini-mcp-tools \
+            -x "gemini-mcp-tools/node_modules/*" \
+            -x "gemini-mcp-tools/tests/*" "gemini-mcp-tools/test/*" "gemini-mcp-tools/__tests__/*" \
+            -x "gemini-mcp-tools/.git*" "gemini-mcp-tools/.github/*" \
+            -x "gemini-mcp-tools/.env*" "gemini-mcp-tools/.env.example" \
+            -x "gemini-mcp-tools/freemius-gate.php~" \
+            -x "gemini-mcp-tools/phpunit.xml*" \
+            -x "gemini-mcp-tools/package.json" "gemini-mcp-tools/package-lock.json" "gemini-mcp-tools/yarn.lock" \
+            -x "gemini-mcp-tools/*.sh" \
+            -x "gemini-mcp-tools/.DS_Store" "gemini-mcp-tools/Thumbs.db" \
+            -x "gemini-mcp-tools/*.log"
+          
+          # Move back to root
+          cd ..
+          
+          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+          
+          # Verify ZIP contents and structure
+          echo "=== ZIP Root Structure ==="
+          unzip -l $ZIP_NAME | head -25
+          echo ""
+          echo "=== Freemius SDK Check ==="
+          unzip -l $ZIP_NAME | grep "vendor/start.php" && echo "✓ Freemius SDK found" || echo "⚠️ vendor/start.php not found"
+          echo ""
+          echo "=== Main Plugin File Check ==="
+          unzip -l $ZIP_NAME | grep "gemini-mcp-tools.php" && echo "✓ Main plugin file found" || echo "⚠️ Main plugin file not found"
+          echo ""
+          echo "=== File Count ==="
+          FILE_COUNT=$(unzip -l $ZIP_NAME | tail -1 | awk '{print $2}')
+          ZIP_SIZE=$(du -h $ZIP_NAME | cut -f1)
+          echo "Total files: $FILE_COUNT"
+          echo "ZIP size: $ZIP_SIZE"
+
+      - name: Upload ZIP Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-mcp-tools-plugin-v${{ steps.get_version.outputs.VERSION }}
+          path: gemini-mcp-tools-v${{ steps.get_version.outputs.VERSION }}.zip
+          retention-days: 30
+
+      - name: Deploy to Freemius
+        id: freemius_deploy
+        uses: buttonizer/freemius-deploy@v0.1.3
+        with:
+          file_name: gemini-mcp-tools-v${{ steps.get_version.outputs.VERSION }}.zip
+          version: ${{ steps.get_version.outputs.VERSION }}
+          release_mode: pending
+          sandbox: false
+        env:
+          PUBLIC_KEY: ${{ secrets.FREEMIUS_PUBLIC_KEY }}
+          DEV_ID: ${{ secrets.FREEMIUS_DEV_ID }}
+          SECRET_KEY: ${{ secrets.FREEMIUS_SECRET_KEY }}
+          PLUGIN_SLUG: ${{ secrets.FREEMIUS_PLUGIN_SLUG }}
+          PLUGIN_ID: ${{ secrets.FREEMIUS_PLUGIN_ID }}
+
+      - name: Upload Freemius Versions
+        if: steps.freemius_deploy.outputs.free_version != '' || steps.freemius_deploy.outputs.pro_version != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: freemius-generated-versions-v${{ steps.get_version.outputs.VERSION }}
+          path: |
+            ${{ steps.freemius_deploy.outputs.free_version }}
+            ${{ steps.freemius_deploy.outputs.pro_version }}
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Deployment Summary
+        run: |
+          echo "## 🎉 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.get_version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** v${{ steps.get_version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**ZIP Name:** gemini-mcp-tools-v${{ steps.get_version.outputs.VERSION }}.zip" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** Uploaded to Freemius (Pending)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Login to your Freemius dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "2. Navigate to your plugin's Releases page" >> $GITHUB_STEP_SUMMARY
+          echo "3. Find version ${{ steps.get_version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "4. Click **Released** to make it live for customers" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts:" >> $GITHUB_STEP_SUMMARY
+          echo "- Versioned ZIP: \`gemini-mcp-tools-plugin-v${{ steps.get_version.outputs.VERSION }}\`" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.freemius_deploy.outputs.free_version }}" ]; then
+            echo "- Freemius versions: \`freemius-generated-versions-v${{ steps.get_version.outputs.VERSION }}\`" >> $GITHUB_STEP_SUMMARY
+          fi

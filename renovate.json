@@ -1,0 +1,32 @@
+{
+  \"$schema\": \"https://docs.renovatebot.com/renovate-schema.json\",
+  \"extends\": [
+    \"config:recommended\"
+  ],
+  \"packageRules\": [
+    {
+      \"matchManagers\": [\"npm\"],
+      \"groupName\": \"npm dependencies\",
+      \"groupSlug\": \"npm\"
+    }
+  ],
+  \"schedule\": [\"before 5am on Monday\"],
+  \"automerge\": \"minor\",
+  \"automergeType\": \"pr\",
+  \"commitMessagePrefix\": \"chore(deps):\",
+  \"dependencyDashboard\": true,
+  \"stabilityDays\": 0,
+  \"lockFileMaintenance\": {
+    \"enabled\": true
+  },
+  \"packageRules\": [
+    {
+      \"matchUpdateTypes\": [\"patch\", \"minor\", \"major\"],
+      \"automerge\": true
+    },
+    {
+      \"matchUpdateTypes\": [\"security\"],
+      \"priority\": 10
+    }
+  ]
+}
