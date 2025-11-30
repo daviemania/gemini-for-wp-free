@@ -400,7 +400,7 @@ npm run dev
 ## 🔗 Links
 
 - **Plugin Page:** [https://maniainc.com/gemini-mcp-tools-plugin](https://maniainc.com/gemini-mcp-tools-plugin)
-- **Pricing:** [https://maniainc.com/gemini-mcp-tools-plugin#pricing](https://maniainc.com/gemini-mcp-tools-plugin#pricing)
+- **Pricing:** [https://maniainc.com/gemini-mcp-tools-plugin#pricing](https://maniainc.com/gemini-mcp-tools-plugin#Pricing)
 - **Documentation:** [https://maniainc.com/docs/gemini-mcp-tools](https://maniainc.com/docs/gemini-mcp-tools)
 - **Support:** [https://maniainc.com/support](https://maniainc.com/support)
 - **Author:** [https://maniainc.com](https://maniainc.com)
