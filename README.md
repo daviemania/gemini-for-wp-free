@@ -10,6 +10,15 @@
 
 A powerful CLI-based environment and WordPress plugin for interacting with and managing WordPress sites using AI-powered tools and a custom Model Context Protocol (MCP). This project provides comprehensive WordPress management through 37+ MCP functions, enabling developers and administrators to perform complex tasks, automate workflows, and leverage AI for content creation and site maintenance.
 
+**Multi-AI Server that's Fully Integrated with WordPress MCP + Configured to Support Local Ollama Models/Ollama Cloud + Gemini AI as Fallback**
+
+<img width="734" height="851" alt="Multi-AI Server that's Fully Integrated with WordPress MCP + Configured to Support Local Ollama Models/Ollama Cloud + Gemini AI as Fallback" src="https://github.com/user-attachments/assets/55a562eb-39e6-4f5d-9241-fc9deca6c8b3" />
+
+
+**AI Context at Work! Gemini Native Chat Analyzing a 7000-Word Live Post on [Mania Africa](https://maniainc.com/technology/the-ultimate-server-side-caching-guide-for-wordpress-redis-varnish-and-cloudflare-enterprise-explained/)**
+
+<img width="959" height="538" alt="AI Context at Work! Gemini Native Chat Analyzing a 7000-Word Live Post on Mania Africa" src="https://github.com/user-attachments/assets/6d44fa76-ed4e-4bfa-a5af-aa5292ac7c1f" />
+
 ### Key Features
 
 - ✅ **37+ WordPress CRUD Tools** - Complete control over posts, pages, users, comments, media, taxonomies, and options
@@ -20,6 +29,12 @@ A powerful CLI-based environment and WordPress plugin for interacting with and m
 - ✅ **Multiple AI Providers** - Ollama (local), OpenRouter (50+ models), Claude, Exa AI, and more
 - ✅ **Developer-Focused** - Streamlined workflow with VS Code Dev Containers
 - ✅ **Multisite Compatible** - Works with WordPress multisite networks
+
+
+**Functional Claude Code Router (CCR) Relay that is Integrated to be Always-On with PM2/System Service**
+
+<img width="847" height="466" alt="Functional Claude Code Router (CCR) Relay that is Integrated to be Always-On with PM2/System Service" src="https://github.com/user-attachments/assets/4aedd79d-c7a0-4c93-9173-47c51b712ec7" />
+
 
 ## 💎 Pricing & Plans
 
@@ -48,6 +63,12 @@ Starting at **$29/month** or **$275/year** (save 21%)
 - ✅ **Ollama Integration** - Run local AI models on your server
 - ✅ **OpenRouter Access** - 50+ AI model providers in one API
 - ✅ **Exa Search** - Intelligent, context-aware web search
+
+
+**Gemini Native CLI Chat Integrated with Exa Search Functionality**
+  
+<img width="959" height="428" alt="Gemini Native CLI Chat Integrated with Exa Search Functionality" src="https://github.com/user-attachments/assets/39bdc1f6-dc70-410d-a969-da38063e4820" />
+
 - ✅ **Claude Code** - AI-powered coding assistance from Anthropic
 - ✅ **GitHub Chat** - Repository-aware AI conversations
 - ✅ **Priority Email Support** - Get help when you need it
@@ -77,6 +98,12 @@ Starting at **$127.99/month** or **$1223/year** (save 20%)
 ### 🛒 Get Premium
 
 **[View All Plans & Pricing →](https://maniainc.com/gemini-mcp-tools-plugin)**
+
+
+**EXA Search Displaying Results in Basic Chat (Premium Only)**
+
+<img width="944" height="418" alt="EXA Search Displaying Results in Basic Chat (Premium Only)" src="https://github.com/user-attachments/assets/26fc608d-8524-4585-8cc1-b22691e82d75" />
+
 
 **Try Premium Risk-Free:**
 - ✅ 3-day trial available
@@ -122,6 +149,12 @@ npm install
 2. Download the premium version from your Freemius account
 3. Upload and activate in WordPress
 4. Enter your license key under **Plugins → Gemini MCP Tools**
+
+
+**Claude Code Router Relay for Use with Any of the OPENROUTER Models (A lot More Choice for FREE API USE)**
+
+<img width="847" height="466" alt="Claude Code Router Relay for Use with Any of the OPENROUTER Models (A lot More Choice for FREE API USE)" src="https://github.com/user-attachments/assets/84bc3a92-3659-4df4-8e03-8ed5aba99945" />
+
 
 ### Development Container Setup
 
@@ -182,6 +215,10 @@ Interaction with the WordPress site is primarily handled through the Gemini CLI 
 # Start interactive chat with MCP
 npm run chatwmcp
 ```
+
+**Multi AI Server with MCP Tools for WordPress**
+
+<img width="959" height="539" alt="Multi AI Server with MCP Tools for WordPress" src="https://github.com/user-attachments/assets/16b998ea-bf97-401b-8c57-6fb56cb0339e" />
 
 ### MCP Functions
 
@@ -260,6 +297,11 @@ Available with Premium plans:
 - **`composed_exploring_dolphin`** - Advanced automation
 - **`claude_code`** - AI coding assistance
 - **`github_chat`** - Repository-aware AI help
+
+
+**Using CCR CODE with CLAUDE but using OPENROUTER Models (50+ AI Models Using a SINGLE API)**
+
+<img width="959" height="410" alt="Using CCR CODE with CLAUDE but using OPENROUTER Models (50+ AI Models Using a SINGLE API)" src="https://github.com/user-attachments/assets/e5fc7f8f-e29d-4b43-9a9a-54f68ee6e335" />
 
 ---
 
