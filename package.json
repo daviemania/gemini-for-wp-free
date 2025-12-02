@@ -12,7 +12,7 @@
         "@azure/core-sse": "latest",
         "@google/generative-ai": "^0.24.1",
         "chalk": "^5.6.2",
-        "express": "^5.1.0",
+        "express": "^5.2.1",
         "fs-extra": "^11.3.2",
         "inquirer": "^13.0.1",
         "node-cron": "^4.2.1",
