@@ -9,7 +9,7 @@ updates:
     labels:
       - "dependencies"
     assignees:
-      - "your-github-username"  # Replace with your actual username
+      - "daviemania"  # Replace with your actual username
     commit-message:
       prefix: "chore(deps):"
     groups:
