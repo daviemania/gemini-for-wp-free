@@ -326,3 +326,5 @@ curl -i -X POST 'https://maniainc.com/wp-json/mcp/v1/sse' \
 *   **Arguments:**
     *   `message` (string, required): Prompt describing the desired image.
     *   `postId` (integer, optional): Optional post ID to attach the image to.
+    
+**Environment Configuration for MCP Relay**: The MCP relay server requires the WordPress bearer token to be configured in its own environment. Navigate to the relay server directory (typically `/home/bitnami/gemini-project/`) and ensure a `.env` file exists with `WP_MCP_TOKEN=your_token_here` (using the same token from your WordPress MCP plugin settings). After adding or updating the token, restart the relay with `pm2 restart gemini-mcp-relay --update-env` to load the new environment variables. You can verify the token is loaded correctly by checking the logs with `pm2 logs gemini-mcp-relay --lines 20` - the Authorization header should show `Bearer your_token` instead of `Bearer undefined`.
