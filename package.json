@@ -13,6 +13,8 @@
         "@azure/core-sse": "latest",
         "@google/generative-ai": "^0.24.1",
         "chalk": "^4.1.2",
+        "commander": "^12.1.0",
+        "dotenv": "^17.2.3",
         "exa-js": "^2.0.3",
         "express": "^5.1.0",
         "fs-extra": "^11.3.2",
@@ -22,7 +24,6 @@
         "npm": "^11.6.3",
         "ollama": "^0.6.3",
         "simple-git": "^3.30.0",
-        "commander": "^12.1.0",
         "yaml": "^2.8.1"
     },
     "devDependencies": {
