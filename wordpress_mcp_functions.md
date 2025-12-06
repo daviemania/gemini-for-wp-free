@@ -5,7 +5,7 @@ This document outlines the 37 Media Control Protocol (MCP) functions available f
 ## API Endpoint and Authentication
 
 *   **REST API Endpoint:** `/wp-json/mcp/v1/sse`
-*   **Authentication:** Bearer Token `${WP_MCP_TOKEN}`
+*   **Authentication:** Bearer Token `uX484&B$k@c@6072&VdTJi#3`
 
 ## Request Format
 
@@ -40,7 +40,8 @@ Here is an example of how to correctly call the `wp_list_plugins` function using
 curl -i -X POST 'https://maniainc.com/wp-json/mcp/v1/sse' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer uX484&B$k@c@6072&VdTJi#3' \
-  --data-raw '{
+  --data-raw 
+    "{
     "jsonrpc": "2.0",
     "id": 1,
     "method": "tools/call",
@@ -48,8 +49,84 @@ curl -i -X POST 'https://maniainc.com/wp-json/mcp/v1/sse' \
       "name": "wp_list_plugins",
       "arguments": {}
     }
-  }'
+  }"
 ```
+
+## Troubleshooting Node.js MCP Client Configuration
+
+When developing Node.js applications that interact with the WordPress MCP endpoint, specific issues can arise related to environment variable parsing and request formatting. This section outlines common problems and their solutions.
+
+### 1. `401 Unauthorized` Error due to `WP_MCP_TOKEN` Parsing
+
+**Problem:** Node.js scripts (e.g., `chat-with-mcp.js`, `chat-ollama.js`, `server.js`) using `process.env.WP_MCP_TOKEN` may receive a truncated or incorrectly parsed token if the token contains special characters (like `$` or `^`). This leads to a `401 Unauthorized` error, even if the `WP_MCP_TOKEN` in the `.env` file appears correct and `curl` commands succeed. This occurs because the shell might interpret these special characters before `dotenv` or Node.js can fully load the variable, even when enclosed in single quotes.
+
+**Solution: Base64 Encoding the Token**
+
+To ensure the `WP_MCP_TOKEN` is loaded literally and correctly, it should be Base64 encoded in the `.env` file and decoded within the Node.js script.
+
+**Steps:**
+
+1.  **Encode your `WP_MCP_TOKEN`:**
+    Use your shell to Base64 encode the token. For example:
+    ```bash
+    echo -n 'Hn6204V%o@$^G#9*k58K@06^' | base64
+    # Example Output: SG42MjA0ViVvQCReRyM5Kms1OEswNg==
+    ```
+    (Replace the example token with your actual `WP_MCP_TOKEN`).
+
+2.  **Update your `.env` file:**
+    Replace the old `WP_MCP_TOKEN` line with the Base64 encoded version.
+    ```dotenv
+    # Remove or comment out: export WP_MCP_TOKEN=Hn6204V%o@$^G#9*k58K@06^
+    export WP_MCP_TOKEN_BASE64='YOUR_BASE64_ENCODED_TOKEN_HERE'
+    ```
+    (Ensure you replace `'YOUR_BASE64_ENCODED_TOKEN_HERE'` with the actual Base64 string generated in step 1).
+
+3.  **Modify Node.js scripts (e.g., `chat-with-mcp.js`, `chat-ollama.js`, `server.js`):**
+    Update the script to read `WP_MCP_TOKEN_BASE64` and decode it:
+    ```javascript
+    // chat-with-mcp.js, chat-ollama.js, and server.js
+    const decodedToken = Buffer.from(process.env.WP_MCP_TOKEN_BASE64 || '', 'base64').toString('utf8');
+    const MCP_BEARER_TOKEN = `Bearer ${decodedToken}`;
+    ```
+    (The `Buffer` class is available in Node.js for this purpose).
+
+4.  **Restart your shell session:**
+    After modifying `.env`, always restart your terminal or re-source your environment (e.g., `source ~/.env` or similar, depending on your setup) to ensure the new environment variable is loaded.
+
+### 2. Incorrect MCP Endpoint and JSON-RPC 2.0 Format
+
+**Problem:** Some Node.js MCP client scripts (e.g., `chat-with-mcp.js`, `chat-ollama.js`, `server.js`) were initially configured to:
+*   Target a local relay URL (e.g., `http://localhost:3001`) instead of the direct WordPress MCP endpoint.
+*   Send a simplified JSON body (`{ tool: toolName, args }`) which does not conform to the required JSON-RPC 2.0 format.
+
+**Solution:**
+
+1.  **Correct Endpoint URL:**
+    Ensure the script targets the correct WordPress MCP endpoint:
+    ```javascript
+    const MCP_RELAY_URL = "https://maniainc.com/wp-json/mcp/v1/sse";
+    ```
+    (Note: the constant name `MCP_RELAY_URL` was kept for consistency as per user request, but it points directly to the WordPress API).
+
+2.  **Implement JSON-RPC 2.0 Request Format:**
+    Modify the `fetch` call's `body` to adhere to the JSON-RPC 2.0 specification:
+    ```javascript
+    body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: Date.now(),
+        method: "tools/call",
+        params: {
+            name: toolName,
+            arguments: args,
+        },
+    })
+    ```
+
+**Note on `ollama-manager.js`:**
+The `ollama-manager.js` script does not directly handle the `WP_MCP_TOKEN` or make raw MCP calls. Instead, it is a utility that *receives* a pre-configured `mcpClient` instance from calling scripts (like `chat-ollama.js` or `server.js`). Therefore, ensuring that the calling scripts correctly configure and pass the `mcpClient` (with the Base64 token and JSON-RPC 2.0 format fixes) is sufficient for `ollama-manager.js` to function correctly with MCP tools.
+
+These corrections ensure proper communication and authentication with the WordPress Media Control Protocol endpoint from Node.js applications.
 
 ## Functions
 
@@ -326,5 +403,5 @@ curl -i -X POST 'https://maniainc.com/wp-json/mcp/v1/sse' \
 *   **Arguments:**
     *   `message` (string, required): Prompt describing the desired image.
     *   `postId` (integer, optional): Optional post ID to attach the image to.
-    
+
 **Environment Configuration for MCP Relay**: The MCP relay server requires the WordPress bearer token to be configured in its own environment. Navigate to the relay server directory (typically `/home/bitnami/gemini-project/`) and ensure a `.env` file exists with `WP_MCP_TOKEN=your_token_here` (using the same token from your WordPress MCP plugin settings). After adding or updating the token, restart the relay with `pm2 restart gemini-mcp-relay --update-env` to load the new environment variables. You can verify the token is loaded correctly by checking the logs with `pm2 logs gemini-mcp-relay --lines 20` - the Authorization header should show `Bearer your_token` instead of `Bearer undefined`.

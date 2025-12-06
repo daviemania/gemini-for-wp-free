@@ -10,23 +10,29 @@ const readline = require("readline");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { callExaTool, EXA_TOOLS } = require("./exa-tools");
 
-const MCP_RELAY_URL = "http://localhost:3001";
-const MCP_BEARER_TOKEN = `Bearer ${process.env.WP_MCP_TOKEN}`;
-
-// Add this temporarily to debug:
-console.log("Token loaded:", process.env.WP_MCP_TOKEN ? "YES" : "NO");
-console.log("Full bearer token:", MCP_BEARER_TOKEN);
+const MCP_RELAY_URL = "https://maniainc.com/wp-json/mcp/v1/sse";
+const decodedToken = Buffer.from(process.env.WP_MCP_TOKEN_BASE64 || '', 'base64').toString('utf8');
+const MCP_BEARER_TOKEN = `Bearer ${decodedToken}`;
 
 // MCP Tools Client
 async function callMCPTool(toolName, args = {}) {
     try {
+
         const response = await fetch(MCP_RELAY_URL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: MCP_BEARER_TOKEN,
             },
-            body: JSON.stringify({ tool: toolName, args }),
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                id: Date.now(),
+                method: "tools/call",
+                params: {
+                    name: toolName,
+                    arguments: args,
+                },
+            }),
         });
 
         if (!response.ok) {

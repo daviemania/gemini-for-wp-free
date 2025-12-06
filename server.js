@@ -12,8 +12,8 @@ const HybridAIManager = require("./ai-manager-hybrid");
 const OllamaManager = require("./ollama-manager");
 
 // MCP Client
-const MCP_RELAY_URL = "http://localhost:3001";
-const MCP_BEARER_TOKEN = `Bearer ${process.env.WP_MCP_TOKEN}`;
+const MCP_RELAY_URL = "https://maniainc.com/wp-json/mcp/v1/sse";
+const MCP_BEARER_TOKEN = `Bearer ${Buffer.from(process.env.WP_MCP_TOKEN_BASE64 || '', 'base64').toString('utf8')}`;
 
 class MCPClient {
     constructor(relayUrl, bearerToken) {
@@ -30,8 +30,13 @@ class MCPClient {
                     Authorization: this.bearerToken,
                 },
                 body: JSON.stringify({
-                    tool: toolName,
-                    args: args,
+                    jsonrpc: "2.0",
+                    id: Date.now(),
+                    method: "tools/call",
+                    params: {
+                        name: toolName,
+                        arguments: args,
+                    },
                 }),
             });
 
